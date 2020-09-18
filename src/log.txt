@@ -1,0 +1,4 @@
+17-09-2020 17:12:54 'CreateForm' object has no attribute 'sum_label'
+17-09-2020 17:15:33 'CreateForm' object has no attribute 'contragent_label'
+17-09-2020 17:17:27 'CreateForm' object has no attribute 'date_finish_entry_entry'
+18-09-2020 09:47:04 'CreateForm' object has no attribute '_create_request_'
