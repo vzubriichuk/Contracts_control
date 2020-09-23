@@ -56,10 +56,13 @@ class DBConnect(object):
         query = '''exec contracts.Access_Check @UserLogin = ?'''
 
         self.__cursor.execute(query, UserLogin)
-        access = self.__cursor.fetchone()[0]
+        access = self.__cursor.fetchone()
         # check AccessType
-        if access and (access == 1):
+        if access and (access[0] == 1):
             return True
+        else:
+            return None
+
 
     @monitor_network_state
     def alter_payment(self, userID, paymentID, date_planed, SumNoTax):
@@ -81,15 +84,14 @@ class DBConnect(object):
             return 0
 
     @monitor_network_state
-    def create_request(self, userID, mvz, office, categoryID, contragent, csp,
+    def create_request(self, userID, mvz, contragent, csp,
                        plan_date, sumtotal, nds, text, approval, is_cashless,
                        payconditionsID, initiator_name, okpo):
         """ Executes procedure that creates new request.
         """
         query = '''
-        exec payment.create_request @UserID = ?,
+        exec contracts.create_request @UserID = ?,
                                     @MVZ = ?,
-                                    @Office = ?,
                                     @CategoryID = ?,
                                     @Contragent = ?,
                                     @date_planed = ?,
@@ -104,7 +106,7 @@ class DBConnect(object):
                                     @okpo = ?
             '''
         try:
-            self.__cursor.execute(query, userID, mvz, office, categoryID,
+            self.__cursor.execute(query, userID, mvz,
                                   contragent, plan_date, text,
                                   sumtotal, nds, csp, approval, is_cashless,
                                   payconditionsID, initiator_name, okpo)

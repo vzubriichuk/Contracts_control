@@ -2,3 +2,27 @@
 17-09-2020 17:15:33 'CreateForm' object has no attribute 'contragent_label'
 17-09-2020 17:17:27 'CreateForm' object has no attribute 'date_finish_entry_entry'
 18-09-2020 09:47:04 'CreateForm' object has no attribute '_create_request_'
+18-09-2020 23:06:38 'NoneType' object is not subscriptable
+18-09-2020 23:07:36 'NoneType' object is not subscriptable
+18-09-2020 23:09:16 'NoneType' object is not subscriptable
+18-09-2020 23:11:32 'NoneType' object is not subscriptable
+18-09-2020 23:12:51 'NoneType' object is not subscriptable
+18-09-2020 23:14:31 'NoneType' object is not subscriptable
+18-09-2020 23:14:56 'NoneType' object is not subscriptable
+18-09-2020 23:15:28 'NoneType' object is not subscriptable
+18-09-2020 23:15:45 'NoneType' object is not subscriptable
+18-09-2020 23:16:17 'NoneType' object is not subscriptable
+18-09-2020 23:17:15 'NoneType' object is not subscriptable
+18-09-2020 23:17:38 'NoneType' object is not subscriptable
+19-09-2020 07:22:39 'NoneType' object is not subscriptable
+19-09-2020 07:24:19 'NoneType' object is not subscriptable
+19-09-2020 07:24:24 'NoneType' object is not subscriptable
+19-09-2020 11:28:22 'NoneType' object is not subscriptable
+19-09-2020 11:28:39 'NoneType' object is not subscriptable
+19-09-2020 11:28:48 'NoneType' object is not subscriptable
+19-09-2020 11:30:56 list index out of range
+19-09-2020 11:38:58 'NoneType' object is not subscriptable
+19-09-2020 11:39:07 'NoneType' object is not subscriptable
+22-09-2020 15:58:38 'CreateForm' object has no attribute 'square'
+23-09-2020 13:58:51 'CreateForm' object has no attribute 'date_start_label'
+23-09-2020 15:38:33 'CreateForm' object has no attribute 'sum_entry'
