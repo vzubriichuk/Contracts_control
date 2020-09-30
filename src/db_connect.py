@@ -34,7 +34,7 @@ class DBConnect(object):
         conn_str = (
             f'Driver={{SQL Server}};'
             f'Server={self._server};'
-            )
+        )
         if self._db is not None:
             conn_str += f'Database={self._db};'
         if self._uid:
@@ -63,54 +63,65 @@ class DBConnect(object):
         else:
             return None
 
+    # @monitor_network_state
+    # def alter_payment(self, userID, paymentID, date_planed, SumNoTax):
+    #     """ Alter payment and log changes on server.
+    #     """
+    #     query = '''
+    #     exec payment.alter_payment @UserID = ?,
+    #                                @PaymentID = ?,
+    #                                @date_planed = ?,
+    #                                @SumNoTax = ?
+    #     '''
+    #
+    #     try:
+    #         self.__cursor.execute(query, userID, paymentID, date_planed,
+    #                               SumNoTax)
+    #         self.__db.commit()
+    #         return 1
+    #     except pyodbc.ProgrammingError:
+    #         return 0
 
     @monitor_network_state
-    def alter_payment(self, userID, paymentID, date_planed, SumNoTax):
-        """ Alter payment and log changes on server.
-        """
-        query = '''
-        exec payment.alter_payment @UserID = ?,
-                                   @PaymentID = ?,
-                                   @date_planed = ?,
-                                   @SumNoTax = ?
-        '''
-
-        try:
-            self.__cursor.execute(query, userID, paymentID, date_planed,
-                                  SumNoTax)
-            self.__db.commit()
-            return 1
-        except pyodbc.ProgrammingError:
-            return 0
-
-    @monitor_network_state
-    def create_request(self, userID, mvz, contragent, csp,
-                       plan_date, sumtotal, nds, text, approval, is_cashless,
-                       payconditionsID, initiator_name, okpo):
+    def create_request(self, userID, mvz, start_date, finish_date,
+                       sum_extra_total,
+                       sumtotal, nds, square, contragent, okpo,
+                       num_main_contract,
+                       num_add_contract, date_main_contract,
+                       date_add_contract, text):
         """ Executes procedure that creates new request.
         """
         query = '''
-        exec contracts.create_request @UserID = ?,
+        exec contracts.create_contract @UserID = ?,
                                     @MVZ = ?,
-                                    @CategoryID = ?,
-                                    @Contragent = ?,
-                                    @date_planed = ?,
-                                    @Description = ?,
-                                    @SumNoTax = ?,
-                                    @Tax = ?,
-                                    @CSP = ?,
-                                    @Approval = ?,
-                                    @is_cashless = ?,
-                                    @PayConditionsID = ?,
-                                    @initiator_name = ?,
-                                    @okpo = ?
+                                    @start_date = ?,
+                                    @finish_date = ?,
+                                    @sum_extra_total = ?,
+                                    @sumtotal = ?,
+                                    @nds = ?,
+                                    @square = ?,
+                                    @contragent = ?,                             
+                                    @okpo = ?,
+                                    @num_main_contract = ?,
+                                    @num_add_contract = ?,
+                                    @date_main_contract = ?,
+                                    @date_add_contract = ?,
+                                    @text = ?
             '''
+        print(userID, mvz, start_date, finish_date,
+              sum_extra_total,
+              sumtotal, nds, square, contragent, okpo,
+              num_main_contract,
+              num_add_contract, date_main_contract,
+              date_add_contract, text)
         try:
-            self.__cursor.execute(query, userID, mvz,
-                                  contragent, plan_date, text,
-                                  sumtotal, nds, csp, approval, is_cashless,
-                                  payconditionsID, initiator_name, okpo)
-            request_allowed = self.__cursor.fetchone()[0]
+            self.__cursor.execute(query, userID, mvz, start_date, finish_date,
+                                  sum_extra_total,
+                                  sumtotal, nds, square, contragent, okpo,
+                                  num_main_contract,
+                                  num_add_contract, date_main_contract,
+                                  date_add_contract, text)
+            request_allowed = self.__cursor.fetchall()
             self.__db.commit()
             return request_allowed
         except pyodbc.ProgrammingError:
@@ -128,33 +139,33 @@ class DBConnect(object):
         self.__cursor.execute(query, UserLogin)
         return self.__cursor.fetchone()
 
-    @monitor_network_state
-    def get_allowed_initiators(self, UserID, AccessType, isSuperUser):
-        """ Determines list of persons that should be shown in filters.
-        """
-        query = '''
-        exec payment.get_allowed_initiators @UserID = ?,
-                                            @AccessType = ?,
-                                            @isSuperUser = ?
-        '''
-        self.__cursor.execute(query, UserID, AccessType, isSuperUser)
-        return [(None, 'Все'), ] + self.__cursor.fetchall()
-
-    @monitor_network_state
-    def get_approvals(self, paymentID):
-        """ Returns all approvals of the request with id = paymentID.
-        """
-        query = "exec payment.get_approvals @paymentID = ?"
-        self.__cursor.execute(query, paymentID)
-        return self.__cursor.fetchall()
-
-    @monitor_network_state
-    def get_approvals_for_first_stage(self):
-        """ Returns all approvals for first stage who can be chosen.
-        """
-        query = "exec payment.get_approvals_for_first_stage"
-        self.__cursor.execute(query)
-        return self.__cursor.fetchall()
+    # @monitor_network_state
+    # def get_allowed_initiators(self, UserID, AccessType, isSuperUser):
+    #     """ Determines list of persons that should be shown in filters.
+    #     """
+    #     query = '''
+    #     exec payment.get_allowed_initiators @UserID = ?,
+    #                                         @AccessType = ?,
+    #                                         @isSuperUser = ?
+    #     '''
+    #     self.__cursor.execute(query, UserID, AccessType, isSuperUser)
+    #     return [(None, 'Все'), ] + self.__cursor.fetchall()
+    #
+    # @monitor_network_state
+    # def get_approvals(self, paymentID):
+    #     """ Returns all approvals of the request with id = paymentID.
+    #     """
+    #     query = "exec payment.get_approvals @paymentID = ?"
+    #     self.__cursor.execute(query, paymentID)
+    #     return self.__cursor.fetchall()
+    #
+    # @monitor_network_state
+    # def get_approvals_for_first_stage(self):
+    #     """ Returns all approvals for first stage who can be chosen.
+    #     """
+    #     query = "exec payment.get_approvals_for_first_stage"
+    #     self.__cursor.execute(query)
+    #     return self.__cursor.fetchall()
 
     @monitor_network_state
     def get_info_to_alter_payment(self, paymentID):
@@ -190,7 +201,6 @@ class DBConnect(object):
         self.__cursor.execute(query)
         return self.__cursor.fetchall()
 
-
     @monitor_network_state
     def get_contracts_list(self, mvz=None, statusID=None):
         """ Get list contracts with filters.
@@ -200,8 +210,9 @@ class DBConnect(object):
                                              @StatusID = ?
            '''
         self.__cursor.execute(query, mvz, statusID)
-        return self.__cursor.fetchall()
-
+        contracts = self.__cursor.fetchall()
+        self.__db.commit()
+        return contracts
 
     @monitor_network_state
     def get_status_list(self):

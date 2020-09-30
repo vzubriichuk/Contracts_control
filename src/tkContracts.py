@@ -468,18 +468,21 @@ class CreateForm(PaymentFrame):
         self.date_main_label = tk.Label(row2_cf, text='Дата дог.', padx=7)
         self.date_main = tk.StringVar()
         self.date_main_contract = DateEntry(row2_cf, width=16, state='readonly',
-                                          textvariable=self.date_main,
-                                          font=('Arial', 9),
-                                          selectmode='day', borderwidth=2,
-                                          locale='ru_RU')
-        self.sum_extra_label = tk.Label(row2_cf, text='Сумма экспл. без НДС, грн', padx=3)
+                                            textvariable=self.date_main,
+                                            font=('Arial', 9),
+                                            selectmode='day', borderwidth=2,
+                                            locale='ru_RU')
+        self.sum_extra_label = tk.Label(row2_cf,
+                                        text='Сумма экспл. без НДС, грн',
+                                        padx=3)
         self.sum_extra_total = StringSumVar()
         self.sum_extra_total.set('0,00')
         vcmd = (self.register(self._validate_sum))
         self.sum_extra_entry = tk.Entry(row2_cf, name='sum_entry', width=18,
-                                  textvariable=self.sum_extra_total, validate='all',
-                                  validatecommand=(vcmd, '%P')
-                                  )
+                                        textvariable=self.sum_extra_total,
+                                        validate='all',
+                                        validatecommand=(vcmd, '%P')
+                                        )
         self.sum_extra_entry.bind("<FocusIn>", self._on_focus_in_format_sum)
         self.sum_extra_entry.bind("<FocusOut>", self._on_focus_out_format_sum)
 
@@ -493,11 +496,12 @@ class CreateForm(PaymentFrame):
         self.date_add_label = tk.Label(row3_cf, text='Дата доп.', padx=7)
         self.date_add = tk.StringVar()
         self.date_add_contract = DateEntry(row3_cf, width=16, state='readonly',
-                                          textvariable=self.date_add,
-                                          font=('Arial', 9),
-                                          selectmode='day', borderwidth=2,
-                                          locale='ru_RU')
-        self.sum_label = tk.Label(row3_cf, text='Сумма всего без НДС, грн', padx=3)
+                                           textvariable=self.date_add,
+                                           font=('Arial', 9),
+                                           selectmode='day', borderwidth=2,
+                                           locale='ru_RU')
+        self.sum_label = tk.Label(row3_cf, text='Сумма всего без НДС, грн',
+                                  padx=3)
         self.sumtotal = StringSumVar()
         self.sumtotal.set('0,00')
         vcmd = (self.register(self._validate_sum))
@@ -507,7 +511,6 @@ class CreateForm(PaymentFrame):
                                   )
         self.sum_entry.bind("<FocusIn>", self._on_focus_in_format_sum)
         self.sum_entry.bind("<FocusOut>", self._on_focus_out_format_sum)
-
 
         self._row3_pack()
 
@@ -620,7 +623,6 @@ class CreateForm(PaymentFrame):
         self.date_add_contract.set_date(datetime.now())
         self.date_main_contract.set_date(datetime.now())
 
-
     def _convert_date(self, date, output=None):
         """ Take date and convert it into output format.
             If output is None datetime object is returned.
@@ -638,11 +640,13 @@ class CreateForm(PaymentFrame):
         return dat
 
     def _create_request(self):
-        messagetitle = 'Создание заявки'
+        messagetitle = 'Добавление договора'
         sumtotal = float(self.sumtotal.get_float_form()
                          if self.sum_entry.get() else 0)
+        sum_extra_total = float(self.sum_extra_total.get_float_form()
+                                if self.sum_extra_entry.get() else 0)
         square = float(self.square.get_float_form()
-                         if self.square_entry.get() else 0)
+                       if self.square_entry.get() else 0)
         is_validated = self._validate_request_creation(messagetitle, sumtotal)
         if not is_validated:
             return
@@ -650,34 +654,42 @@ class CreateForm(PaymentFrame):
         request = {'mvz': self.mvz_sap.cget('text') or None,
                    # 'office': self.office_box.get(),
                    # 'categoryID': self.categories[self.category_box.get()],
-                   'contragent': self.contragent_entry.get().strip().replace(
-                       '\n', '') or None,
-                   'num_main_contract': self.num_main_contract_entry.get(),
-                   'num_add_contract': self.num_add_contract_entry.get(),
-                   'start_date': self._convert_date(self.date_start_entry.get()),
-                   'finish_date': self._convert_date(self.date_finish_entry.get()),
-                   'square': square,
+                   'start_date': self._convert_date(
+                       self.date_start_entry.get()),
+                   'finish_date': self._convert_date(
+                       self.date_finish_entry.get()),
+                   'sum_extra_total': sum_extra_total,
                    'sumtotal': sumtotal,
                    'nds': self.nds.get(),
-                   'text': self.desc_text.get("1.0", tk.END).strip(),
-                   'okpo': self.okpo_entry.get()
+                   'square': square,
+                   'contragent': self.contragent_entry.get().strip().replace(
+                       '\n', '') or None,
+                   'okpo': self.okpo_entry.get(),
+                   'num_main_contract': self.num_main_contract_entry.get(),
+                   'num_add_contract': self.num_add_contract_entry.get(),
+                   'date_main_contract': self._convert_date(
+                       self.date_main_contract.get()),
+                   'date_add_contract': self._convert_date(
+                       self.date_add_contract.get()),
+                   'text': self.desc_text.get("1.0", tk.END).strip()
                    }
         created_success = self.conn.create_request(userID=self.userID,
                                                    **request)
+        print(created_success)
         if created_success == 1:
             messagebox.showinfo(
-                messagetitle, 'Заявка создана'
+                messagetitle, 'Договор добавлен'
             )
             self._clear()
             self.controller._show_frame('PreviewForm')
-        elif created_success == 0:
-            dat = self._convert_date(self.plan_date_entry.get(), output="%B %Y")
-            messagebox.showerror(
-                messagetitle,
-                'Превышен лимит суммы на {}.\n'
-                'Для повышения лимита обратитесь в отдел контроллинга'
-                    .format(dat)
-            )
+        # elif created_success == 0:
+        #     dat = self._convert_date(self.plan_date_entry.get(), output="%B %Y")
+        #     messagebox.showerror(
+        #         messagetitle,
+        #         'Превышен лимит суммы на {}.\n'
+        #         'Для повышения лимита обратитесь в отдел контроллинга'
+        #             .format(dat)
+        #     )
         else:
             messagebox.showerror(
                 messagetitle, 'Произошла ошибка при создании заявки'
@@ -742,7 +754,6 @@ class CreateForm(PaymentFrame):
         self.sum_entry.pack(side=tk.RIGHT, padx=11)
         self.sum_label.pack(side=tk.RIGHT, padx=0)
 
-
     def _row4_pack(self):
         self.contragent_label.pack(side=tk.LEFT, padx=7)
         self.contragent_entry.pack(side=tk.LEFT, padx=7)
@@ -752,7 +763,6 @@ class CreateForm(PaymentFrame):
         # self.nds7.pack(side=tk.RIGHT, padx=7)
         self.nds20.pack(side=tk.RIGHT, padx=8)
         self.nds_label.pack(side=tk.RIGHT)
-
 
     def _row5_pack(self):
         self.okpo_label.pack(side=tk.LEFT, padx=7)
@@ -793,25 +803,25 @@ class CreateForm(PaymentFrame):
                 messagetitle, 'Не указана сумма'
             )
             return False
-        date_validation = self._validate_plan_date()
-        if date_validation == 'incorrect_date':
-            messagebox.showerror(
-                messagetitle,
-                'Плановая дата не может быть прошедшей'
-            )
-            return False
-        elif date_validation == 'ask_confirmation':
-            confirmed = messagebox.askyesno(title='Подтвердите действие',
-                                            message='Создать заявку на сегодняшную дату?')
-            if not confirmed:
-                return False
-        elif date_validation != 'correct_date':
-            messagebox.showerror(title='Ошибка',
-                                 message=(
-                                     'Возникло непредвиденное исключение\n{}'
-                                     .format(date_validation))
-                                 )
-            return False
+        # date_validation = self._validate_plan_date()
+        # if date_validation == 'incorrect_date':
+        #     messagebox.showerror(
+        #         messagetitle,
+        #         'Плановая дата не может быть прошедшей'
+        #     )
+        #     return False
+        # elif date_validation == 'ask_confirmation':
+        #     confirmed = messagebox.askyesno(title='Подтвердите действие',
+        #                                     message='Создать заявку на сегодняшную дату?')
+        #     if not confirmed:
+        #         return False
+        # elif date_validation != 'correct_date':
+        #     messagebox.showerror(title='Ошибка',
+        #                          message=(
+        #                              'Возникло непредвиденное исключение\n{}'
+        #                              .format(date_validation))
+        #                          )
+        #     return False
         return True
 
     # def _validate_plan_date(self):
@@ -958,11 +968,12 @@ class PreviewForm(PaymentFrame):
         # column name and width
         self.headings = {'№ п/п': 30, 'ID': 0, 'InitiatorID': 0,
                          'Кем создано': 80, 'Дата внесения': 80, 'МВЗ SAP': 70,
-                         'МВЗ': 0, 'Офис': 0, 'Арендодатель': 130, '№ договора': 80,
-                         '№ доп.согл.': 80
+                         'МВЗ': 0, 'Офис': 0, 'Арендодатель': 130,
+                         '№ договора': 80
+            , 'Дата договора': 0, '№ доп.согл.': 80, 'Дата доп.согл.': 0
             , 'Дата с': 80, 'Дата по': 90, 'Площадь': 50, 'Сумма без НДС': 85
             , 'Сумма с НДС': 85, 'Статус': 120, 'Описание': 12
-            , 'Дата договора': 0, 'Дата доп.согл.': 0}
+                         }
 
         # if self.EXTENDED_MODE:
         #     self.table = CheckboxTreeview(preview_cf,
@@ -982,8 +993,8 @@ class PreviewForm(PaymentFrame):
         head = self.table["columns"]
         msg = 'Heading order must be reviewed. Wrong heading: '
         assert head[1] == 'ID', '{}ID'.format(msg)
-        assert head[-4] == 'Статус', '{}Статус'.format(msg)
-        assert head[-5] == 'Сумма с НДС', '{}Сумма с НДС'.format(msg)
+        assert head[-2] == 'Статус', '{}Статус'.format(msg)
+        assert head[-3] == 'Сумма с НДС', '{}Сумма с НДС'.format(msg)
 
         # Bottom Frame with buttons
         bottom_cf = tk.Frame(self, name='bottom_cf')
@@ -1202,11 +1213,13 @@ class PreviewForm(PaymentFrame):
             self.table["columns"] = tuple(self.headings.keys())
             self.table["displaycolumns"] = tuple(k for k in self.headings.keys()
                                                  if k not in (
-                                                 'ID', 'НДС', 'Описание',
-                                                 'Офис','МВЗ', 'InitiatorID',
-                                                 'Инициатор', 'Кем создано'
-                                                 , '№ заявки', 'Дата договора'
-                                                 , 'Дата доп.согл.'))
+                                                     'ID', 'НДС', 'Описание',
+                                                     'Офис', 'МВЗ',
+                                                     'InitiatorID',
+                                                     'Инициатор', 'Кем создано'
+                                                     , '№ заявки',
+                                                     'Дата договора'
+                                                     , 'Дата доп.согл.'))
             for head, width in self.headings.items():
                 self.table.heading(head, text=head, anchor=tk.CENTER)
                 self.table.column(head, width=width, anchor=tk.CENTER)
@@ -1383,7 +1396,7 @@ class PreviewForm(PaymentFrame):
                               values=(i + 1,) + tuple(
                                   map(lambda val: self._format_float(val)
                                   if isinstance(val, Decimal) else val, row)),
-                              tags=(row[-4], 'unchecked'))
+                              tags=(row[-2], 'unchecked'))
 
     def _toggle_all_rows(self, event=None):
         if self.all_rows_checked.get():
