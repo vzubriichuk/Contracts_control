@@ -21,6 +21,7 @@ from xl import export_to_excel
 import locale
 import os, zlib
 import tkinter as tk
+import ast
 
 # example of subsription and default recipient
 EMAIL_TO = b'\xd0\xa4\xd0\xbe\xd0\xb7\xd0\xb7\xd0\xb8|\
@@ -692,7 +693,7 @@ class CreateForm(PaymentFrame):
         #     )
         else:
             messagebox.showerror(
-                messagetitle, 'Произошла ошибка при создании заявки'
+                messagetitle, 'Произошла ошибка при добавлении договора'
             )
 
     def _fill_from_PreviewForm(self, mvz, office, category, contragent, okpo,
@@ -776,6 +777,7 @@ class CreateForm(PaymentFrame):
         # self.limit_month.pack(side=tk.LEFT, expand=False, anchor=tk.W)
         # self.limit_sum.pack(side=tk.LEFT, expand=False, anchor=tk.W)
 
+
     def _validate_request_creation(self, messagetitle, sumtotal):
         """ Check if all fields are filled properly. """
         if not self.mvz_current.get():
@@ -783,24 +785,30 @@ class CreateForm(PaymentFrame):
                 messagetitle, 'Не указано МВЗ'
             )
             return False
-        # if not self.office_box.get():
-        #     messagebox.showerror(
-        #             messagetitle, 'Не выбран офис'
-        #     )
-        #     return False
-        # if not self.category_box.get():
-        #     messagebox.showerror(
-        #             messagetitle, 'Не выбрана категория'
-        #     )
-        #     return False
-        # if not self.pay_conditions_box.get():
-        #     messagebox.showerror(
-        #             messagetitle, 'Не выбраны условия оплаты'
-        #     )
-        #     return False
+        if not self.num_main_contract_entry.get():
+            messagebox.showerror(
+                    messagetitle, 'Не указан номер основного договора'
+            )
+            return False
+        if not self.num_add_contract_entry.get():
+            messagebox.showerror(
+                    messagetitle, 'Не указан номер дополнительного соглашения'
+            )
+            return False
+        if not self.contragent_entry.get():
+            messagebox.showerror(
+                    messagetitle, 'Не указан арендодатель'
+            )
+            return False
+        if ast.literal_eval(self.square_entry.get()[0]) == 0:
+            messagebox.showerror(
+                    messagetitle, 'Не указана площадь аренды'
+            )
+            print(ast.literal_eval(self.square_entry.get()[0]))
+            return False
         if not sumtotal:
             messagebox.showerror(
-                messagetitle, 'Не указана сумма'
+                messagetitle, 'Не указана сумма договора'
             )
             return False
         # date_validation = self._validate_plan_date()

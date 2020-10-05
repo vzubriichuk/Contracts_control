@@ -94,19 +94,19 @@ class DBConnect(object):
         query = '''
         exec contracts.create_contract @UserID = ?,
                                     @MVZ = ?,
-                                    @start_date = ?,
-                                    @finish_date = ?,
-                                    @sum_extra_total = ?,
-                                    @sumtotal = ?,
-                                    @nds = ?,
-                                    @square = ?,
-                                    @contragent = ?,                             
-                                    @okpo = ?,
-                                    @num_main_contract = ?,
-                                    @num_add_contract = ?,
-                                    @date_main_contract = ?,
-                                    @date_add_contract = ?,
-                                    @text = ?
+                                    @DateStart = ?,
+                                    @DateFinish = ?,
+                                    @SumExtraNoTax = ?,
+                                    @SumNoTax = ?,
+                                    @Tax = ?,
+                                    @Square = ?,
+                                    @Contragent = ?,
+                                    @OKPO = ?,
+                                    @NumMain = ?,
+                                    @NumAdditional = ?,
+                                    @DateMain = ?,
+                                    @DateAdditional = ?,
+                                    @Description = ?
             '''
         print(userID, mvz, start_date, finish_date,
               sum_extra_total,
@@ -115,13 +115,12 @@ class DBConnect(object):
               num_add_contract, date_main_contract,
               date_add_contract, text)
         try:
-            self.__cursor.execute(query, userID, mvz, start_date, finish_date,
-                                  sum_extra_total,
-                                  sumtotal, nds, square, contragent, okpo,
-                                  num_main_contract,
+            self.__cursor.execute(query, userID, mvz,start_date,finish_date,
+                                  sum_extra_total,sumtotal, nds,square,
+                                  contragent, okpo, num_main_contract,
                                   num_add_contract, date_main_contract,
                                   date_add_contract, text)
-            request_allowed = self.__cursor.fetchall()
+            request_allowed = self.__cursor.fetchone()[0]
             self.__db.commit()
             return request_allowed
         except pyodbc.ProgrammingError:
