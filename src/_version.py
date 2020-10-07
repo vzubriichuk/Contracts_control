@@ -1,4 +1,4 @@
-version_info = (0, 1, 4)
+version_info = (0, 3, 0)
 upd_path = (b'x\x9c\x8b\x89I\xcb\xaf\xaa\xaa\xd4\xcbI\xcc\x8bq\xc9O.\xcdM'
             b'\xcd+)\x8e\xf1\xc8\xcfI\xc9\xccK\x8fqI-H,*\x81\x88\x05g\xe6\x14'
             b'\xe4\xc7\\\x98}a\xdf\x85\xcd\x17v\\l\xbc\xd8ta\xc7\x85]\x176\xc4'
@@ -11,4 +11,4 @@ __url__ = 'https://github.com/vzubriichuk/Contracts_contol'
 __version__ = '.'.join(map(str, version_info))
 __author__ = 'Shkaberda V., Zubriichuk V.'
 __license__ = 'MIT License'
-__copyright__ = 'Copyright 2020 Zubriichuk Vitalii'
+__copyright__ = 'Copyright 2020 Zubriichuk Vitaliy'

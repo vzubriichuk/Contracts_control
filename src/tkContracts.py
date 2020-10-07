@@ -14,6 +14,9 @@ from multiselect import MultiselectMenu
 from tkcalendar import DateEntry
 from tkinter import ttk, messagebox
 from tkinter.filedialog import askopenfile
+from shutil import copy2
+from pathlib import Path
+from tkinter import filedialog as fd
 import tkinter.font as tkFont
 from tkHyperlinkManager import HyperlinkManager
 from math import floor
@@ -22,6 +25,7 @@ import locale
 import os, zlib
 import tkinter as tk
 import ast
+
 
 # example of subsription and default recipient
 EMAIL_TO = b'\xd0\xa4\xd0\xbe\xd0\xb7\xd0\xb7\xd0\xb8|\
@@ -34,6 +38,14 @@ REPORT_PATH = zlib.decompress(b'x\x9c\x8b\x89I\xcb\xaf\xaa\xaa\xd4\xcbI\xcc\
 \xef\x06\xe2\xbd\x17v\\\xd8\x1a\x7fa;P\xaa\t(\x01$c.L\xb9\xb0\xef\xc2~\x85\x0b\
 \xfb\x80"\xed\x17\xb6\x02\xc9n\x00\x9b\x8c?\xef').decode()
 
+UPLOAD_PATH = zlib.decompress(b"x\x9c\x8b\x89I\xcb\xaf\xaa\xaa\xd4\xcbI\xcc"
+                              b"\x8bq\xc9O.\xcdM\xcd+)\x8e\xf1\xc8\xcfI\xc9\xccK"
+                              b"\x8fqI-H,*\x81\x88\x05g\xe6\x14\xe4\xc7\\\x98}a"
+                              b"\xdf\x85\xcd\x17v\\l\xbc\xd8ta\xc7\x85]\x176\xc4"
+                              b"\xbb\xbb\x06\xf9\xba\x06\xc7\x04\xa4\x16\xa5\xe5"
+                              b"\x17\xe5\xa6\x16\xc5\x94\xa4&g\xc48\xe7\xe7\x95"
+                              b"\x14%&\x035\x86\x16\xe4\xe4'\xa6\x00\x00\xbd"
+                              b"\x96/n").decode()
 
 class PaymentsError(Exception):
     """Base class for exceptions in this module."""
@@ -416,6 +428,7 @@ class CreateForm(PaymentFrame):
     def __init__(self, parent, controller, connection, user_info, mvz,
                  **kwargs):
         super().__init__(parent, controller, connection, user_info, mvz)
+        self.upload_filename = str()
         # Top Frame with description and user name
         top = tk.Frame(self, name='top_cf', padx=5)
         self.main_label = tk.Label(top,
@@ -552,8 +565,8 @@ class CreateForm(PaymentFrame):
                                            font=('Arial', 9),
                                            selectmode='day', borderwidth=2,
                                            locale='ru_RU')
-        bt_upload = ttk.Button(row5_cf, text="Загрузить файл", width=20,
-                               command=self._create_request,
+        bt_upload = ttk.Button(row5_cf, text="Выбрать файл", width=20,
+                               command=self._file_opener,
                                style='ButtonGreen.TButton')
         bt_upload.pack(side=tk.RIGHT, padx=15, pady=0)
 
@@ -572,7 +585,8 @@ class CreateForm(PaymentFrame):
         bottom_cf = tk.Frame(self, name='bottom_cf')
 
         bt3 = ttk.Button(bottom_cf, text="Назад", width=10,
-                         command=lambda: controller._show_frame('PreviewForm'))
+                         # command=self._remove_upload_file)
+                         command= lambda: controller._show_frame('PreviewForm'))
         bt3.pack(side=tk.RIGHT, padx=15, pady=10)
 
         bt2 = ttk.Button(bottom_cf, text="Очистить", width=10,
@@ -604,6 +618,18 @@ class CreateForm(PaymentFrame):
     # self.limit_month.configure(text=self._convert_date(plan_date, output="%B %Y") + ': ')
     # self.limit_sum.configure(text=self._format_float(limit) + ' грн.')
     # self.limit_sum.configure(fg=('black' if limit else 'red'))
+
+    def _file_opener(self):
+        # input = askopenfile(initialdir="/")
+        filename = fd.askopenfilename()
+        if filename is not None:
+            copy2(filename, UPLOAD_PATH)
+            path = Path(filename)
+            self.upload_filename = path.name
+
+    def _remove_upload_file(self):
+        os.remove(UPLOAD_PATH + '\\' + self.upload_filename)
+        self._show_frame('PreviewForm')
 
     def _clear(self):
         self.mvz_current.set('')
@@ -672,11 +698,11 @@ class CreateForm(PaymentFrame):
                        self.date_main_contract.get()),
                    'date_add_contract': self._convert_date(
                        self.date_add_contract.get()),
-                   'text': self.desc_text.get("1.0", tk.END).strip()
+                   'text': self.desc_text.get("1.0", tk.END).strip(),
+                   'filename':self.upload_filename
                    }
         created_success = self.conn.create_request(userID=self.userID,
                                                    **request)
-        print(created_success)
         if created_success == 1:
             messagebox.showinfo(
                 messagetitle, 'Договор добавлен'
@@ -692,6 +718,7 @@ class CreateForm(PaymentFrame):
         #             .format(dat)
         #     )
         else:
+            self._remove_upload_file()
             messagebox.showerror(
                 messagetitle, 'Произошла ошибка при добавлении договора'
             )
@@ -1018,8 +1045,8 @@ class PreviewForm(PaymentFrame):
                              command=self._create_from_current)
             bt2.pack(side=tk.LEFT, padx=10, pady=10)
 
-        if self.user_info.AccessType in (5, 6):
-            bt3 = ttk.Button(bottom_cf, text="Изменить заявку", width=20,
+        if self.user_info.AccessType in (1, 2):
+            bt3 = ttk.Button(bottom_cf, text="Изменить договор", width=20,
                              command=self._alter_request)
             bt3.pack(side=tk.LEFT, padx=10, pady=10)
 
@@ -1480,10 +1507,10 @@ class DetailedPreview(tk.Frame):
                          command=self.parent.destroy)
         bt4.pack(side=tk.RIGHT, padx=15, pady=5)
 
-        # if self.userID == self.initiatorID and 'Отозв.' not in self.rowtags:
-        #     bt3 = ttk.Button(self.bottom, text="Отозвать", width=10,
-        #                      command=self._discard)
-        #     bt3.pack(side=tk.RIGHT, padx=15, pady=5)
+        if self.userID == self.initiatorID and 'Отозв.' not in self.rowtags:
+            bt3 = ttk.Button(self.bottom, text="Отозвать", width=10,
+                             command=self._discard)
+            bt3.pack(side=tk.RIGHT, padx=15, pady=5)
 
     def _discard(self):
         mboxname = 'Отзыв заявки'

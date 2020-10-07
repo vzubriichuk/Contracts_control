@@ -88,7 +88,7 @@ class DBConnect(object):
                        sumtotal, nds, square, contragent, okpo,
                        num_main_contract,
                        num_add_contract, date_main_contract,
-                       date_add_contract, text):
+                       date_add_contract, text, filename):
         """ Executes procedure that creates new request.
         """
         query = '''
@@ -106,20 +106,21 @@ class DBConnect(object):
                                     @NumAdditional = ?,
                                     @DateMain = ?,
                                     @DateAdditional = ?,
-                                    @Description = ?
+                                    @Description = ?,
+                                    @Filename = ?
             '''
         print(userID, mvz, start_date, finish_date,
               sum_extra_total,
               sumtotal, nds, square, contragent, okpo,
               num_main_contract,
               num_add_contract, date_main_contract,
-              date_add_contract, text)
+              date_add_contract, text, filename)
         try:
             self.__cursor.execute(query, userID, mvz,start_date,finish_date,
                                   sum_extra_total,sumtotal, nds,square,
                                   contragent, okpo, num_main_contract,
                                   num_add_contract, date_main_contract,
-                                  date_add_contract, text)
+                                  date_add_contract, text, filename)
             request_allowed = self.__cursor.fetchone()[0]
             self.__db.commit()
             return request_allowed

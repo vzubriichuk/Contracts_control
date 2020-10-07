@@ -33,7 +33,6 @@ def apply_update():
     from zlib import decompress
 
     upd_path = decompress(upd_path).decode()
-    print(upd_path)
     for file in ('contracts_checker.exe', 'contracts_checker.exe.manifest'):
         copy2(os.path.join(upd_path, file), '.')
     with open('contracts_checker.inf', 'w') as f:
