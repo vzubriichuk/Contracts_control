@@ -1,0 +1,4 @@
+08-10-2020 14:56:47 module 'datetime' has no attribute 'now'
+08-10-2020 14:57:18 module 'datetime' has no attribute 'now'
+08-10-2020 14:57:48 module 'datetime' has no attribute 'now'
+08-10-2020 15:03:19 module 'datetime' has no attribute 'now'

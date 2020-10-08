@@ -21,6 +21,7 @@ import tkinter.font as tkFont
 from tkHyperlinkManager import HyperlinkManager
 from math import floor
 from xl import export_to_excel
+import datetime as dt
 import locale
 import os, zlib
 import tkinter as tk
@@ -38,13 +39,11 @@ REPORT_PATH = zlib.decompress(b'x\x9c\x8b\x89I\xcb\xaf\xaa\xaa\xd4\xcbI\xcc\
 \xfb\x80"\xed\x17\xb6\x02\xc9n\x00\x9b\x8c?\xef').decode()
 
 UPLOAD_PATH = zlib.decompress(b"x\x9c\x8b\x89I\xcb\xaf\xaa\xaa\xd4\xcbI\xcc"
-                              b"\x8bq\xc9O.\xcdM\xcd+)\x8e\xf1\xc8\xcfI\xc9\xccK"
-                              b"\x8fqI-H,*\x81\x88\x05g\xe6\x14\xe4\xc7\\\x98}a"
-                              b"\xdf\x85\xcd\x17v\\l\xbc\xd8ta\xc7\x85]\x176\xc4"
-                              b"\xbb\xbb\x06\xf9\xba\x06\xc7\x04\xa4\x16\xa5\xe5"
-                              b"\x17\xe5\xa6\x16\xc5\x94\xa4&g\xc48\xe7\xe7\x95"
-                              b"\x14%&\x035\x86\x16\xe4\xe4'\xa6\x00\x00\xbd"
-                              b"\x96/n").decode()
+                              b"\x8bq\xc9O.\xcdM\xcd+)\x8e\xf1\xc8\xcfI\xc9"
+                              b"\xccK\x8fqI-H,*\x81\x88\xf9\xe4\xa7g\x16"
+                              b"\x97df'\xc6\xb8e\xe6\xc5\\\x98x\xb1\xef\xc2"
+                              b"\x96\x0b\xdb.l\xbd\xd8\x14\x13Z\x90\x93\x9f"
+                              b"\x98\x02\x00\xa3\x8c!\xb1").decode()
 
 
 class PaymentsError(Exception):
@@ -306,13 +305,14 @@ class PaymentApp(tk.Tk):
 
         self.geometry('{}x{}+{}+{}'.format(w, h, start_x, start_y))
 
-    def _fill_CreateForm(self, МВЗ, Офис, Категория, Контрагент, ЕГРПОУ,
-                         Описание,
-                         **kwargs):
+    def _fill_CreateForm(self, МВЗ, **kwargs):
         """ Control function to transfer data from Preview- to CreateForm. """
+        num_main_contract_heading = kwargs['№ договора']
+        date_main_contract_heading = kwargs['Дата договора']
+        contragent_heading = kwargs['Арендодатель']
         frame = self._frames['CreateForm']
-        frame._fill_from_PreviewForm(МВЗ, Офис, Категория, Контрагент, ЕГРПОУ,
-                                     Описание)
+        frame._fill_from_PreviewForm(МВЗ, num_main_contract_heading,
+                                     date_main_contract_heading, contragent_heading)
 
     def _onKeyRelease(*args):
         event = args[1]
@@ -722,21 +722,31 @@ class CreateForm(PaymentFrame):
                 messagetitle, 'Произошла ошибка при добавлении договора'
             )
 
-    def _fill_from_PreviewForm(self, mvz, office, category, contragent, okpo,
-                               description):
-        """ When button "Создать из заявки" from PreviewForm is activated,
+            # МВЗ, Договор, Арендодатель, ЕГРПОУ, Описание
+
+    def _convert_str_date(self, date):
+        """ Take str and convert it into date format.
+            date: str in format '%d[./]%m[./]%y' or '%d[./]%m[./]%Y'.
+        """
+        date_time_str = date
+        date_time_obj = dt.datetime.strptime(date_time_str,                                                   '%Y-%m-%d')
+        return date_time_obj.date()
+
+    def _fill_from_PreviewForm(self, mvz, num_main_contract_entry, date_main_contract
+                               , contragent):
+        """ When button "Добавить из договора" from PreviewForm is activated,
         fill some fields taken from choosed in PreviewForm request.
         """
         self._clear()
         self.mvz_current.set(mvz)
+        self.num_main_contract_entry.insert(0, num_main_contract_entry)
+        self.date_main_contract.set_date(self._convert_str_date(date_main_contract))
         self.mvz_sap.config(text=self.get_mvzSAP(self.mvz_current.get()) or '')
-        # self.office_box.set(office)
-        # self.category_box.set(category)
         self.contragent_entry.insert(0, contragent)
-        self.okpo_entry.insert(0, okpo)
-        self.desc_text.insert('end',
-                              description.strip() if type(description) == str
-                              else description)
+        # self.okpo_entry.insert(0, okpo)
+        # self.desc_text.insert('end',
+        #                       description.strip() if type(description) == str
+        #                       else description)
 
     def _restraint_by_mvz(self, event):
         """ Shows mvz_sap that corresponds to chosen MVZ and restraint offices.
@@ -1044,10 +1054,10 @@ class PreviewForm(PaymentFrame):
                              command=self._create_from_current)
             bt2.pack(side=tk.LEFT, padx=10, pady=10)
 
-        if self.user_info.AccessType in (1, 2):
-            bt3 = ttk.Button(bottom_cf, text="Изменить договор", width=20,
-                             command=self._alter_request)
-            bt3.pack(side=tk.LEFT, padx=10, pady=10)
+        # if self.user_info.AccessType in (1, 2):
+        #     bt3 = ttk.Button(bottom_cf, text="Изменить договор", width=20,
+        #                      command=self._alter_request)
+        #     bt3.pack(side=tk.LEFT, padx=10, pady=10)
 
         bt6 = ttk.Button(bottom_cf, text="Выход", width=10,
                          command=controller._quit)
@@ -1177,10 +1187,12 @@ class PreviewForm(PaymentFrame):
     def _create_from_current(self):
         """ Raises CreateForm with partially filled labels/entries. """
         curRow = self.table.focus()
+
         if curRow:
             # extract info to be putted in CreateForm
             to_fill = dict(zip(self.table["columns"],
                                self.table.item(curRow).get('values')))
+            # print(to_fill)
             try:
                 self._check_rights_to_fill_CreateForm(to_fill)
             except NoRightsToFillCreateFormError as e:
@@ -1503,7 +1515,7 @@ class DetailedPreview(tk.Frame):
         # Bottom Frame with buttons
         self.bottom = tk.Frame(self, name='bottom')
         if self.filename_preview:
-            bt1 = ttk.Button(self.bottom, text="Открыть файл", width=20,
+            bt1 = ttk.Button(self.bottom, text="Просмотреть файл", width=20,
                              command=self._open_file,
                              style='ButtonGreen.TButton')
             bt1.pack(side=tk.LEFT, padx=15, pady=5)
@@ -1513,10 +1525,10 @@ class DetailedPreview(tk.Frame):
                          command=self.parent.destroy)
         bt2.pack(side=tk.RIGHT, padx=15, pady=5)
 
-        if self.userID == self.initiatorID and 'Отозв.' not in self.rowtags:
-            bt3 = ttk.Button(self.bottom, text="Отозвать", width=10,
-                             command=self._discard)
-            bt3.pack(side=tk.RIGHT, padx=15, pady=5)
+        # if self.userID == self.initiatorID and 'Отозв.' not in self.rowtags:
+        #     bt3 = ttk.Button(self.bottom, text="Отозвать", width=10,
+        #                      command=self._discard)
+        #     bt3.pack(side=tk.RIGHT, padx=15, pady=5)
 
     def _discard(self):
         mboxname = 'Отзыв заявки'
