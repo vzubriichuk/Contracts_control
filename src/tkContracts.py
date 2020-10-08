@@ -26,7 +26,6 @@ import os, zlib
 import tkinter as tk
 import ast
 
-
 # example of subsription and default recipient
 EMAIL_TO = b'\xd0\xa4\xd0\xbe\xd0\xb7\xd0\xb7\xd0\xb8|\
 \xd0\x9b\xd0\xbe\xd0\xb3\xd0\xb8\xd1\x81\xd1\x82\xd0\xb8\xd0\xba\xd0\xb0|\
@@ -46,6 +45,7 @@ UPLOAD_PATH = zlib.decompress(b"x\x9c\x8b\x89I\xcb\xaf\xaa\xaa\xd4\xcbI\xcc"
                               b"\x17\xe5\xa6\x16\xc5\x94\xa4&g\xc48\xe7\xe7\x95"
                               b"\x14%&\x035\x86\x16\xe4\xe4'\xa6\x00\x00\xbd"
                               b"\x96/n").decode()
+
 
 class PaymentsError(Exception):
     """Base class for exceptions in this module."""
@@ -586,7 +586,7 @@ class CreateForm(PaymentFrame):
 
         bt3 = ttk.Button(bottom_cf, text="Назад", width=10,
                          # command=self._remove_upload_file)
-                         command= lambda: controller._show_frame('PreviewForm'))
+                         command=lambda: controller._show_frame('PreviewForm'))
         bt3.pack(side=tk.RIGHT, padx=15, pady=10)
 
         bt2 = ttk.Button(bottom_cf, text="Очистить", width=10,
@@ -620,7 +620,6 @@ class CreateForm(PaymentFrame):
     # self.limit_sum.configure(fg=('black' if limit else 'red'))
 
     def _file_opener(self):
-        # input = askopenfile(initialdir="/")
         filename = fd.askopenfilename()
         if filename is not None:
             copy2(filename, UPLOAD_PATH)
@@ -699,7 +698,7 @@ class CreateForm(PaymentFrame):
                    'date_add_contract': self._convert_date(
                        self.date_add_contract.get()),
                    'text': self.desc_text.get("1.0", tk.END).strip(),
-                   'filename':self.upload_filename
+                   'filename': self.upload_filename
                    }
         created_success = self.conn.create_request(userID=self.userID,
                                                    **request)
@@ -804,7 +803,6 @@ class CreateForm(PaymentFrame):
         # self.limit_month.pack(side=tk.LEFT, expand=False, anchor=tk.W)
         # self.limit_sum.pack(side=tk.LEFT, expand=False, anchor=tk.W)
 
-
     def _validate_request_creation(self, messagetitle, sumtotal):
         """ Check if all fields are filled properly. """
         if not self.mvz_current.get():
@@ -814,22 +812,22 @@ class CreateForm(PaymentFrame):
             return False
         if not self.num_main_contract_entry.get():
             messagebox.showerror(
-                    messagetitle, 'Не указан номер основного договора'
+                messagetitle, 'Не указан номер основного договора'
             )
             return False
         if not self.num_add_contract_entry.get():
             messagebox.showerror(
-                    messagetitle, 'Не указан номер дополнительного соглашения'
+                messagetitle, 'Не указан номер дополнительного соглашения'
             )
             return False
         if not self.contragent_entry.get():
             messagebox.showerror(
-                    messagetitle, 'Не указан арендодатель'
+                messagetitle, 'Не указан арендодатель'
             )
             return False
         if ast.literal_eval(self.square_entry.get()[0]) == 0:
             messagebox.showerror(
-                    messagetitle, 'Не указана площадь аренды'
+                messagetitle, 'Не указана площадь аренды'
             )
             print(ast.literal_eval(self.square_entry.get()[0]))
             return False
@@ -1007,7 +1005,8 @@ class PreviewForm(PaymentFrame):
                          '№ договора': 80
             , 'Дата договора': 0, '№ доп.согл.': 80, 'Дата доп.согл.': 0
             , 'Дата с': 80, 'Дата по': 90, 'Площадь': 50, 'Сумма без НДС': 85
-            , 'Сумма с НДС': 85, 'Статус': 120, 'Описание': 12
+            , 'Сумма с НДС': 85, 'Файл': 30, 'Имя файла': 0, 'Статус': 120
+            , 'Описание': 12
                          }
 
         # if self.EXTENDED_MODE:
@@ -1029,7 +1028,7 @@ class PreviewForm(PaymentFrame):
         msg = 'Heading order must be reviewed. Wrong heading: '
         assert head[1] == 'ID', '{}ID'.format(msg)
         assert head[-2] == 'Статус', '{}Статус'.format(msg)
-        assert head[-3] == 'Сумма с НДС', '{}Сумма с НДС'.format(msg)
+        assert head[-5] == 'Сумма с НДС', '{}Сумма с НДС'.format(msg)
 
         # Bottom Frame with buttons
         bottom_cf = tk.Frame(self, name='bottom_cf')
@@ -1254,7 +1253,8 @@ class PreviewForm(PaymentFrame):
                                                      'Инициатор', 'Кем создано'
                                                      , '№ заявки',
                                                      'Дата договора'
-                                                     , 'Дата доп.согл.'))
+                                                     , 'Дата доп.согл.'
+                                                 ,'Имя файла'))
             for head, width in self.headings.items():
                 self.table.heading(head, text=head, anchor=tk.CENTER)
                 self.table.column(head, width=width, anchor=tk.CENTER)
@@ -1459,6 +1459,7 @@ class DetailedPreview(tk.Frame):
         self.paymentID, self.initiatorID = info[1:3]
         self.userID = userID
         self.rowtags = tags
+        self.filename_preview = str()
 
         # Top Frame with description and user name
         self.top = tk.Frame(self, name='top_cf', padx=5, pady=5)
@@ -1468,10 +1469,16 @@ class DetailedPreview(tk.Frame):
 
         # Add info to table_frame
         fonts = (('Arial', 9, 'bold'), ('Arial', 10))
+        # filelink = str()
         for row in zip(range(len(head)), zip(head, info)):
             if row[1][0] not in ('№ п/п', 'ID', 'InitiatorID', 'Дата создания',
-                                 'ID Утверждающего', 'Утверждающий', 'Статус'):
+                                 'ID Утверждающего', 'Утверждающий', 'Статус', 'Файл'):
+                if row[1][0] == 'Имя файла' and (row[1][1] != 'None'
+                                                 or row[1][1] is not None):
+                    self.filename_preview = row[1][1]
                 self._newRow(self.table_frame, fonts, *row)
+
+
 
         # self.appr_label = tk.Label(self.top, text='Утверждающие',
         #                            padx=10, pady=5, font=('Arial', 10, 'bold'))
@@ -1488,24 +1495,23 @@ class DetailedPreview(tk.Frame):
         self._add_buttons()
         self._pack_frames()
 
+    def _open_file(self):
+        pathToFile = UPLOAD_PATH + "\\" + self.filename_preview
+        return os.startfile(pathToFile)
+
     def _add_buttons(self):
         # Bottom Frame with buttons
         self.bottom = tk.Frame(self, name='bottom')
-
-        if self.approveclass_bool:
-            bt1 = ttk.Button(self.bottom, text="Утвердить", width=10,
-                             command=lambda: self._close(True),
+        if self.filename_preview:
+            bt1 = ttk.Button(self.bottom, text="Открыть файл", width=20,
+                             command=self._open_file,
                              style='ButtonGreen.TButton')
             bt1.pack(side=tk.LEFT, padx=15, pady=5)
 
-            bt2 = ttk.Button(self.bottom, text="Отклонить", width=10,
-                             command=lambda: self._close(False),
-                             style='ButtonRed.TButton')
-            bt2.pack(side=tk.LEFT, padx=15, pady=5)
 
-        bt4 = ttk.Button(self.bottom, text="Закрыть", width=10,
+        bt2 = ttk.Button(self.bottom, text="Закрыть", width=10,
                          command=self.parent.destroy)
-        bt4.pack(side=tk.RIGHT, padx=15, pady=5)
+        bt2.pack(side=tk.RIGHT, padx=15, pady=5)
 
         if self.userID == self.initiatorID and 'Отозв.' not in self.rowtags:
             bt3 = ttk.Button(self.bottom, text="Отозвать", width=10,
