@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Wed May 15 22:51:04 2019
 
-@author: v.shkaberda
-"""
 from _version import __version__
 from checkboxtreeview import CheckboxTreeview
 from calendar import month_name
@@ -628,7 +624,7 @@ class CreateForm(PaymentFrame):
 
     def _remove_upload_file(self):
         os.remove(UPLOAD_PATH + '\\' + self.upload_filename)
-        self._show_frame('PreviewForm')
+        # self._show_frame('PreviewForm')
 
     def _clear(self):
         self.mvz_current.set('')
@@ -886,12 +882,14 @@ class CreateForm(PaymentFrame):
 
 class PreviewForm(PaymentFrame):
     def __init__(self, parent, controller, connection, user_info,
-                 mvz, status_list, **kwargs):
+                 mvz, type_business,  status_list, **kwargs):
         super().__init__(parent, controller, connection, user_info, mvz)
-        self.office = tuple(sorted(set(x for lst in map(lambda v: v[1],
-                                                        self.mvz.values()) for x
-                                       in lst),
-                                   key=lambda s: '' if s == 'Все' else s))
+
+        # self.office = tuple(sorted(set(x for lst in map(lambda v: v[1],
+        #                                                 self.mvz.values()) for x
+        #                                in lst),
+        #                            key=lambda s: '' if s == 'Все' else s))
+        self.type_businessID, self.type_business = zip(*[(None, 'Все'), ] + type_business)
         self.statusID, self.status_list = zip(*[(None, 'Все'), ] + status_list)
         # print(self.statusID, self.status_list)
         # EXTENDED_MODE activates extended selectmode for treeview, realized
@@ -932,9 +930,9 @@ class PreviewForm(PaymentFrame):
         self.mvz_box = ttk.Combobox(row1_cf, width=45, state='readonly')
         self.mvz_box['values'] = list(self.mvz)
 
-        # self.office_label = tk.Label(row1_cf, text='Офис', padx=20)
-        # self.office_box = ttk.Combobox(row1_cf, width=20, state='readonly')
-        # self.office_box['values'] = self.office
+        self.type_business_label = tk.Label(row1_cf, text='Тип бизнеса', padx=20)
+        self.type_business_box = ttk.Combobox(row1_cf, width=15, state='readonly')
+        self.type_business_box['values'] = self.type_business
 
         self.status_label = tk.Label(row1_cf, text='Статус договора', padx=20)
         self.status_box = ttk.Combobox(row1_cf, width=10, state='readonly')
@@ -1174,7 +1172,7 @@ class PreviewForm(PaymentFrame):
     def _clear_filters(self):
         # self.initiator_box.set('Все')
         self.mvz_box.set('Все')
-        # self.office_box.set('Все')
+        self.type_business_box.set('Все')
         self.status_box.set('Все')
         self.date_type.set('плановая')
         self.date_entry_m.set_default_option()
@@ -1340,8 +1338,8 @@ class PreviewForm(PaymentFrame):
         self.mvz_box.pack(side=tk.LEFT, padx=5, pady=5)
         self.status_label.pack(side=tk.LEFT)
         self.status_box.pack(side=tk.LEFT, padx=5, pady=5)
-        # self.office_box.pack(side=tk.RIGHT, padx=5, pady=5)
-        # self.office_label.pack(side=tk.RIGHT)
+        self.type_business_box.pack(side=tk.LEFT, padx=5, pady=5)
+        self.type_business_label.pack(side=tk.LEFT)
         self.bt3_2.pack(side=tk.RIGHT, padx=10)
         self.bt3_1.pack(side=tk.RIGHT, padx=10)
 

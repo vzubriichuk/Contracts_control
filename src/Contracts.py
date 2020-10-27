@@ -98,6 +98,7 @@ def main():
             refs = {'connection': sql,
                     'user_info': user_info,
                     'mvz': sql.get_objects(),
+                    'type_business': sql.get_type_business(),
                     # 'pay_conditions': sql.get_pay_conditions(),
                     # 'allowed_initiators':
                     #     sql.get_allowed_initiators(user_info.UserID,

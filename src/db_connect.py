@@ -176,27 +176,21 @@ class DBConnect(object):
         return self.__cursor.fetchall()
 
     @monitor_network_state
-    def get_limits_info(self):
-        """ Returns info about limits for all users.
-        """
-        query = '''
-        select UserID, UserName,
-               cast(userCreateRequestLimit as float) as userCreateRequestLimit,
-               resetCreateRequestLimit
-        from payment.People
-        where AccessType in (1, 2)
-            or isSuperUser = 1
-        order by UserName
-            '''
-        self.__cursor.execute(query)
-        return self.__cursor.fetchall()
-
-    @monitor_network_state
     def get_objects(self):
         """ Returns list of available MVZ for current user.
         """
         query = '''
         exec contracts.get_objects
+        '''
+        self.__cursor.execute(query)
+        return self.__cursor.fetchall()
+
+    @monitor_network_state
+    def get_type_business(self):
+        """ Returns list of available MVZ for current user.
+        """
+        query = '''
+        exec contracts.get_type_business
         '''
         self.__cursor.execute(query)
         return self.__cursor.fetchall()
