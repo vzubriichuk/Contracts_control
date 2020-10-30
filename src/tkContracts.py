@@ -308,7 +308,8 @@ class PaymentApp(tk.Tk):
         contragent_heading = kwargs['Арендодатель']
         frame = self._frames['CreateForm']
         frame._fill_from_PreviewForm(МВЗ, num_main_contract_heading,
-                                     date_main_contract_heading, contragent_heading)
+                                     date_main_contract_heading,
+                                     contragent_heading)
 
     def _onKeyRelease(*args):
         event = args[1]
@@ -422,37 +423,36 @@ class PaymentFrame(tk.Frame):
 
 class CreateForm(PaymentFrame):
     def __init__(self, parent, controller, connection, user_info, mvz,
-                 **kwargs):
+                 type_business, **kwargs):
         super().__init__(parent, controller, connection, user_info, mvz)
         self.upload_filename = str()
         # Top Frame with description and user name
         top = tk.Frame(self, name='top_cf', padx=5)
         self.main_label = tk.Label(top,
-                                   text='Форма внесения информации по договору',
+                                   text='Форма внесения дополнительного '
+                                        'соглашения к основому договору',
                                    padx=10, font=('Arial', 8, 'bold'))
 
         # self.limit_label = tk.Label(top, text='Оставшийся лимит     —',
         #                       padx=10, font=('Arial', 8, 'bold'), fg='#003db9')
         # self.limit_month = tk.Label(top, text='', font=('Arial', 9))
         # self.limit_sum = tk.Label(top, text='', font=('Arial', 8, 'bold'))
-
+        self.type_businessID, self.type_business = zip(*type_business)
         self._add_user_label(top)
         self._top_pack()
 
-        # First Fill Frame with (MVZ, office)
+        # First Fill Frame with (MVZ, business)
         row1_cf = tk.Frame(self, name='row1_cf', padx=15)
 
-        self.mvz_label = tk.Label(row1_cf, text='МВЗ', padx=7)
+        self.mvz_label = tk.Label(row1_cf, text='Объект', padx=7)
         self.mvz_current = tk.StringVar()
         # self.mvz_current.set(self.mvznames[0]) # default value
         self.mvz_box = ttk.OptionMenu(row1_cf, self.mvz_current, '',
                                       *self.mvz.keys(),
                                       command=self._restraint_by_mvz)
         self.mvz_box.config(width=40)
-        self.mvz_sap_label = tk.Label(row1_cf, text='МВЗ SAP', padx=10)
+        self.mvz_sap_label = tk.Label(row1_cf, text='SAP', padx=10)
         self.mvz_sap = tk.Label(row1_cf, padx=10, bg='lightgray', width=11)
-        # self.office_label = tk.Label(row1_cf, text='Офис', padx=10)
-        # self.office_box = ttk.Combobox(row1_cf, width=20, state='disabled')
         self.square = StringSumVar()
         self.square.set('0,00')
         self.square_label = tk.Label(row1_cf, text='Площадь, м2')
@@ -463,32 +463,66 @@ class CreateForm(PaymentFrame):
                                      )
         self.square_entry.bind("<FocusIn>", self._on_focus_in_format_sum)
         self.square_entry.bind("<FocusOut>", self._on_focus_out_format_sum)
+        self.square_entry.bind("<FocusIn>", self._multiply_cost_square)
+        self.square_entry.bind("<FocusOut>", self._multiply_cost_square)
 
         self._row1_pack()
 
         # Second Fill Frame
         row2_cf = tk.Frame(self, name='row2_cf', padx=15)
+        self.type_business_label = tk.Label(row2_cf, text='Тип бизнеса', padx=7)
+        self.type_business_box = ttk.Combobox(row2_cf, width=20,
+                                              state='readonly')
+        self.type_business_box['values'] = self.type_business
+        self.date_main_label_start = tk.Label(row2_cf, text='Договор с:',
+                                              padx=12)
+        self.date_main_start = tk.StringVar()
+        self.date_main_contract_start = DateEntry(row2_cf, width=16,
+                                                  state='readonly',
+                                                  textvariable=self.date_main_start,
+                                                  font=('Arial', 9),
+                                                  selectmode='day',
+                                                  borderwidth=2,
+                                                  locale='ru_RU')
+        self.square_cost = StringSumVar()
+        self.square_cost.set('0,00')
+        self.square_cost_label = tk.Label(row2_cf, text='Цена за 1м2, грн')
+        vcmd = (self.register(self._validate_sum))
+        self.square_cost_entry = tk.Entry(row2_cf, name='square_cost_entry',
+                                          width=18,
+                                          textvariable=self.square_cost,
+                                          validate='all',
+                                          validatecommand=(vcmd, '%P')
+                                          )
+        self.square_cost_entry.bind("<FocusIn>", self._multiply_cost_square)
+        self.square_cost_entry.bind("<FocusOut>",self._multiply_cost_square)
+
+        self._row2_pack()
+
+        # Third Fill Frame
+        row3_cf = tk.Frame(self, name='row3_cf', padx=15)
 
         # self.category_label = tk.Label(row2_cf, text='Категория', padx=7)
         # self.category_box = ttk.Combobox(row2_cf, width=23, state='readonly')
         # self.category_box['values'] = list(self.categories)
 
-        self.num_main_contract = tk.Label(row2_cf, text='№ договора', padx=0)
-        self.num_main_contract_entry = tk.Entry(row2_cf, width=26)
-        self.date_main_label = tk.Label(row2_cf, text='Дата дог.', padx=7)
-        self.date_main = tk.StringVar()
-        self.date_main_contract = DateEntry(row2_cf, width=16, state='readonly',
-                                            textvariable=self.date_main,
-                                            font=('Arial', 9),
-                                            selectmode='day', borderwidth=2,
-                                            locale='ru_RU')
-        self.sum_extra_label = tk.Label(row2_cf,
+        self.num_main_contract = tk.Label(row3_cf, text='№ договора', padx=0)
+        self.num_main_contract_entry = tk.Entry(row3_cf, width=23)
+        self.date_main_label_end = tk.Label(row3_cf, text='Договор по:', padx=7)
+        self.date_main_end = tk.StringVar()
+        self.date_main_contract_end = DateEntry(row3_cf, width=16,
+                                                state='readonly',
+                                                textvariable=self.date_main_end,
+                                                font=('Arial', 9),
+                                                selectmode='day', borderwidth=2,
+                                                locale='ru_RU')
+        self.sum_extra_label = tk.Label(row3_cf,
                                         text='Сумма экспл. без НДС, грн',
                                         padx=3)
         self.sum_extra_total = StringSumVar()
         self.sum_extra_total.set('0,00')
         vcmd = (self.register(self._validate_sum))
-        self.sum_extra_entry = tk.Entry(row2_cf, name='sum_entry', width=18,
+        self.sum_extra_entry = tk.Entry(row3_cf, name='sum_extra_entry', width=18,
                                         textvariable=self.sum_extra_total,
                                         validate='all',
                                         validatecommand=(vcmd, '%P')
@@ -496,72 +530,77 @@ class CreateForm(PaymentFrame):
         self.sum_extra_entry.bind("<FocusIn>", self._on_focus_in_format_sum)
         self.sum_extra_entry.bind("<FocusOut>", self._on_focus_out_format_sum)
 
-        self._row2_pack()
-
-        # Third Fill Frame
-        row3_cf = tk.Frame(self, name='row3_cf', padx=15)
-
-        self.num_add_contract = tk.Label(row3_cf, text='№ доп.дог.  ', padx=0)
-        self.num_add_contract_entry = tk.Entry(row3_cf, width=26)
-        self.date_add_label = tk.Label(row3_cf, text='Дата доп.', padx=7)
-        self.date_add = tk.StringVar()
-        self.date_add_contract = DateEntry(row3_cf, width=16, state='readonly',
-                                           textvariable=self.date_add,
-                                           font=('Arial', 9),
-                                           selectmode='day', borderwidth=2,
-                                           locale='ru_RU')
-        self.sum_label = tk.Label(row3_cf, text='Сумма всего без НДС, грн',
-                                  padx=3)
-        self.sumtotal = StringSumVar()
-        self.sumtotal.set('0,00')
-        vcmd = (self.register(self._validate_sum))
-        self.sum_entry = tk.Entry(row3_cf, name='sum_entry', width=18,
-                                  textvariable=self.sumtotal, validate='all',
-                                  validatecommand=(vcmd, '%P')
-                                  )
-        self.sum_entry.bind("<FocusIn>", self._on_focus_in_format_sum)
-        self.sum_entry.bind("<FocusOut>", self._on_focus_out_format_sum)
-
         self._row3_pack()
 
         # Fourth Fill Frame
         row4_cf = tk.Frame(self, name='row4_cf', padx=15)
-        self.contragent_label = tk.Label(row4_cf, text='Арендодатель')
-        self.contragent_entry = tk.Entry(row4_cf, width=26)
-        self.date_start_label = tk.Label(row4_cf, text='Период с', padx=9)
-        self.date_start = tk.StringVar()
-        self.date_start_entry = DateEntry(row4_cf, width=16, state='readonly',
-                                          textvariable=self.date_start,
-                                          font=('Arial', 9),
-                                          selectmode='day', borderwidth=2,
-                                          locale='ru_RU')
-        self.nds_label = tk.Label(row4_cf, text='Ставка НДС', padx=0)
-        self.nds = tk.IntVar()
-        self.nds.set(20)
-        self.nds20 = ttk.Radiobutton(row4_cf, text="20 %", variable=self.nds,
-                                     value=20)
-        # self.nds7 = ttk.Radiobutton(row3_cf, text="7 %", variable=self.nds,
-        #                             value=7)
-        self.nds0 = ttk.Radiobutton(row4_cf, text="0 %", variable=self.nds,
-                                    value=0)
 
-        # sc = tk.Entry(row4_cf, width=15)
+        self.num_add_contract = tk.Label(row4_cf, text='№ доп.дог.  ', padx=0)
+        self.num_add_contract_entry = tk.Entry(row4_cf, width=23)
+        self.date_add_label = tk.Label(row4_cf, text='Дата доп.', padx=7)
+        self.date_add = tk.StringVar()
+        self.date_add_contract = DateEntry(row4_cf, width=16, state='readonly',
+                                           textvariable=self.date_add,
+                                           font=('Arial', 9),
+                                           selectmode='day', borderwidth=2,
+                                           locale='ru_RU')
+        self.sum_label = tk.Label(row4_cf, text='Сумма всего без НДС, грн',
+                                  padx=3)
+        # self.sumtotal = StringSumVar()
+        # self.sumtotal.set('0.00')
+        # vcmd = (self.register(self._validate_sum))
+        # self.sum_entry = tk.Entry(row4_cf, name='sum_entry', width=18,
+        #                           textvariable=self.sumtotal, validate='all',
+        #                           validatecommand=(vcmd, '%P')
+        #                           )
+        self.sumtotal = tk.StringVar(row4_cf, value='0.00')
+        self.sum_entry = tk.Entry(row4_cf, textvariable=self.sumtotal, width=18)
+        # self.sum_entry.config(state='disabled')
+
+        self.sum_entry.bind("<FocusIn>", self._on_focus_in_format_sum)
+        self.sum_entry.bind("<FocusOut>", self._on_focus_out_format_sum)
 
         self._row4_pack()
 
         # Fifth Fill Frame
         row5_cf = tk.Frame(self, name='row5_cf', padx=15)
+        self.contragent_label = tk.Label(row5_cf, text='Арендодатель')
+        self.contragent_entry = tk.Entry(row5_cf, width=23)
+        self.date_start_label = tk.Label(row5_cf, text='Период с:', padx=17)
+        self.date_start = tk.StringVar()
+        self.date_start_entry = DateEntry(row5_cf, width=16, state='readonly',
+                                          textvariable=self.date_start,
+                                          font=('Arial', 9),
+                                          selectmode='day', borderwidth=2,
+                                          locale='ru_RU')
+        self.nds_label = tk.Label(row5_cf, text='Ставка НДС', padx=0)
+        self.nds = tk.IntVar()
+        self.nds.set(20)
+        self.nds20 = ttk.Radiobutton(row5_cf, text="20 %", variable=self.nds,
+                                     value=20)
+        # self.nds7 = ttk.Radiobutton(row3_cf, text="7 %", variable=self.nds,
+        #                             value=7)
+        self.nds0 = ttk.Radiobutton(row5_cf, text="0 %", variable=self.nds,
+                                    value=0)
 
-        self.okpo_label = tk.Label(row5_cf, text='ЕГРПОУ           ')
-        self.okpo_entry = tk.Entry(row5_cf, width=26)
-        self.date_finish_label = tk.Label(row5_cf, text='Период по', padx=9)
+        # sc = tk.Entry(row4_cf, width=15)
+
+        self._row5_pack()
+
+        # Six Fill Frame
+        row6_cf = tk.Frame(self, name='row6_cf', padx=15)
+
+        self.okpo_label = tk.Label(row6_cf, text='ЕГРПОУ           ')
+        self.okpo_entry = tk.Entry(row6_cf, width=23)
+        self.date_finish_label = tk.Label(row6_cf, text='Период по:', padx=16)
         self.date_finish = tk.StringVar()
-        self.date_finish_entry = DateEntry(row5_cf, width=16, state='readonly',
+        self.date_finish_entry = DateEntry(row6_cf, width=16, state='readonly',
                                            textvariable=self.date_finish,
                                            font=('Arial', 9),
                                            selectmode='day', borderwidth=2,
                                            locale='ru_RU')
-        bt_upload = ttk.Button(row5_cf, text="Выбрать файл", width=20,
+
+        bt_upload = ttk.Button(row6_cf, text="Выбрать файл", width=20,
                                command=self._file_opener,
                                style='ButtonGreen.TButton')
         bt_upload.pack(side=tk.RIGHT, padx=15, pady=0)
@@ -575,14 +614,14 @@ class CreateForm(PaymentFrame):
         self.desc_text.configure(width=115)
         self.desc_text.pack(in_=text_cf, expand=True)
 
-        self._row5_pack()
+        self._row6_pack()
 
         # Bottom Frame with buttons
         bottom_cf = tk.Frame(self, name='bottom_cf')
 
         bt3 = ttk.Button(bottom_cf, text="Назад", width=10,
-                         # command=self._remove_upload_file)
-                         command=lambda: controller._show_frame('PreviewForm'))
+                         command=self._multiply_cost_square)
+        # command=lambda: controller._show_frame('PreviewForm'))
         bt3.pack(side=tk.RIGHT, padx=15, pady=10)
 
         bt2 = ttk.Button(bottom_cf, text="Очистить", width=10,
@@ -602,6 +641,7 @@ class CreateForm(PaymentFrame):
         row3_cf.pack(side=tk.TOP, fill=tk.X, pady=5)
         row4_cf.pack(side=tk.TOP, fill=tk.X, pady=5)
         row5_cf.pack(side=tk.TOP, fill=tk.X, pady=5)
+        row6_cf.pack(side=tk.TOP, fill=tk.X, pady=5)
         text_cf.pack(side=tk.TOP, fill=tk.X, expand=True, padx=15, pady=15)
 
     # def _check_limit(self, *args, **kwargs):
@@ -617,7 +657,7 @@ class CreateForm(PaymentFrame):
 
     def _file_opener(self):
         filename = fd.askopenfilename()
-        if filename is not None:
+        if filename:
             copy2(filename, UPLOAD_PATH)
             path = Path(filename)
             self.upload_filename = path.name
@@ -625,6 +665,17 @@ class CreateForm(PaymentFrame):
     def _remove_upload_file(self):
         os.remove(UPLOAD_PATH + '\\' + self.upload_filename)
         # self._show_frame('PreviewForm')
+
+    def _multiply_cost_square(self, event):
+        square_get = float(self.square.get_float_form()
+                           if self.square_entry.get() else 0)
+        square_cost_get = float(self.square_cost.get_float_form()
+                                if self.square_cost_entry.get() else 0)
+        total_square_cost = square_get * square_cost_get
+        if event:
+            self.sum_entry.delete(0, tk.END)
+            self.sum_entry.insert(0, total_square_cost)
+            self.sum_entry.bind("<FocusOut>", self._on_focus_out_format_sum)
 
     def _clear(self):
         self.mvz_current.set('')
@@ -725,10 +776,11 @@ class CreateForm(PaymentFrame):
             date: str in format '%d[./]%m[./]%y' or '%d[./]%m[./]%Y'.
         """
         date_time_str = date
-        date_time_obj = dt.datetime.strptime(date_time_str,                                                   '%Y-%m-%d')
+        date_time_obj = dt.datetime.strptime(date_time_str, '%Y-%m-%d')
         return date_time_obj.date()
 
-    def _fill_from_PreviewForm(self, mvz, num_main_contract_entry, date_main_contract
+    def _fill_from_PreviewForm(self, mvz, num_main_contract_entry,
+                               date_main_contract
                                , contragent):
         """ When button "Добавить из договора" from PreviewForm is activated,
         fill some fields taken from choosed in PreviewForm request.
@@ -736,7 +788,8 @@ class CreateForm(PaymentFrame):
         self._clear()
         self.mvz_current.set(mvz)
         self.num_main_contract_entry.insert(0, num_main_contract_entry)
-        self.date_main_contract.set_date(self._convert_str_date(date_main_contract))
+        self.date_main_contract.set_date(
+            self._convert_str_date(date_main_contract))
         self.mvz_sap.config(text=self.get_mvzSAP(self.mvz_current.get()) or '')
         self.contragent_entry.insert(0, contragent)
         # self.okpo_entry.insert(0, okpo)
@@ -764,40 +817,46 @@ class CreateForm(PaymentFrame):
         self.mvz_box.pack(side=tk.LEFT, padx=10)
         self.mvz_sap_label.pack(side=tk.LEFT)
         self.mvz_sap.pack(side=tk.LEFT)
-        # self.office_label.pack(side=tk.LEFT)
-        # self.office_box.pack(side=tk.LEFT, padx=5)
         self.square_entry.pack(side=tk.RIGHT, padx=10)
         self.square_label.pack(side=tk.RIGHT, padx=10)
 
     def _row2_pack(self):
+        self.type_business_label.pack(side=tk.LEFT)
+        self.type_business_box.pack(side=tk.LEFT, padx=17)
+        self.date_main_label_start.pack(side=tk.LEFT)
+        self.date_main_contract_start.pack(side=tk.LEFT, padx=0)
+        self.square_cost_entry.pack(side=tk.RIGHT, padx=10)
+        self.square_cost_label.pack(side=tk.RIGHT, padx=10)
+
+    def _row3_pack(self):
         # self.category_label.pack(side=tk.LEFT)
         # self.category_box.pack(side=tk.LEFT, padx=30)
         self.num_main_contract.pack(side=tk.LEFT, padx=7)
         self.num_main_contract_entry.pack(side=tk.LEFT, padx=19)
-        self.date_main_label.pack(side=tk.LEFT)
-        self.date_main_contract.pack(side=tk.LEFT, padx=0)
+        self.date_main_label_end.pack(side=tk.LEFT)
+        self.date_main_contract_end.pack(side=tk.LEFT, padx=0)
         self.sum_extra_entry.pack(side=tk.RIGHT, padx=11)
         self.sum_extra_label.pack(side=tk.RIGHT, padx=0)
 
-    def _row3_pack(self):
+    def _row4_pack(self):
         self.num_add_contract.pack(side=tk.LEFT, padx=7)
         self.num_add_contract_entry.pack(side=tk.LEFT, padx=19)
         self.date_add_label.pack(side=tk.LEFT)
-        self.date_add_contract.pack(side=tk.LEFT, padx=0)
+        self.date_add_contract.pack(side=tk.LEFT, padx=18)
         self.sum_entry.pack(side=tk.RIGHT, padx=11)
         self.sum_label.pack(side=tk.RIGHT, padx=0)
 
-    def _row4_pack(self):
+    def _row5_pack(self):
         self.contragent_label.pack(side=tk.LEFT, padx=7)
         self.contragent_entry.pack(side=tk.LEFT, padx=7)
         self.date_start_label.pack(side=tk.LEFT)
-        self.date_start_entry.pack(side=tk.LEFT, padx=7)
+        self.date_start_entry.pack(side=tk.LEFT, padx=6)
         self.nds0.pack(side=tk.RIGHT, padx=7)
         # self.nds7.pack(side=tk.RIGHT, padx=7)
         self.nds20.pack(side=tk.RIGHT, padx=8)
         self.nds_label.pack(side=tk.RIGHT)
 
-    def _row5_pack(self):
+    def _row6_pack(self):
         self.okpo_label.pack(side=tk.LEFT, padx=7)
         self.okpo_entry.pack(side=tk.LEFT, padx=7)
         self.date_finish_label.pack(side=tk.LEFT)
@@ -882,15 +941,16 @@ class CreateForm(PaymentFrame):
 
 class PreviewForm(PaymentFrame):
     def __init__(self, parent, controller, connection, user_info,
-                 mvz, type_business,  status_list, **kwargs):
+                 mvz, type_business, status_list, **kwargs):
         super().__init__(parent, controller, connection, user_info, mvz)
 
         # self.office = tuple(sorted(set(x for lst in map(lambda v: v[1],
         #                                                 self.mvz.values()) for x
         #                                in lst),
         #                            key=lambda s: '' if s == 'Все' else s))
-        self.type_businessID, self.type_business = zip(*[(None, 'Все'), ] + type_business)
         self.statusID, self.status_list = zip(*[(None, 'Все'), ] + status_list)
+        self.type_businessID, self.type_business = zip(
+            *[(None, 'Все'), ] + type_business)
         # print(self.statusID, self.status_list)
         # EXTENDED_MODE activates extended selectmode for treeview, realized
         # using checkboxes, and allows to approve multiple requests
@@ -926,12 +986,14 @@ class PreviewForm(PaymentFrame):
         # self.initiator_label = tk.Label(row1_cf, text='Кем создано', padx=10)
         # self.initiator_box = ttk.Combobox(row1_cf, width=35, state='readonly')
 
-        self.mvz_label = tk.Label(row1_cf, text='МВЗ', padx=10)
+        self.mvz_label = tk.Label(row1_cf, text='Объект', padx=10)
         self.mvz_box = ttk.Combobox(row1_cf, width=45, state='readonly')
         self.mvz_box['values'] = list(self.mvz)
 
-        self.type_business_label = tk.Label(row1_cf, text='Тип бизнеса', padx=20)
-        self.type_business_box = ttk.Combobox(row1_cf, width=15, state='readonly')
+        self.type_business_label = tk.Label(row1_cf, text='Тип бизнеса',
+                                            padx=20)
+        self.type_business_box = ttk.Combobox(row1_cf, width=15,
+                                              state='readonly')
         self.type_business_box['values'] = self.type_business
 
         self.status_label = tk.Label(row1_cf, text='Статус договора', padx=20)
@@ -1008,8 +1070,8 @@ class PreviewForm(PaymentFrame):
 
         # column name and width
         self.headings = {'№ п/п': 30, 'ID': 0, 'InitiatorID': 0,
-                         'Кем создано': 80, 'Дата внесения': 80, 'МВЗ SAP': 70,
-                         'МВЗ': 0, 'Офис': 0, 'Арендодатель': 130,
+                         'Кем создано': 80, 'Дата внесения': 80, 'SAP': 70,
+                         'Объект': 0, 'Бизнес': 0, 'Арендодатель': 130,
                          '№ договора': 80
             , 'Дата договора': 0, '№ доп.согл.': 80, 'Дата доп.согл.': 0
             , 'Дата с': 80, 'Дата по': 90, 'Площадь': 50, 'Сумма без НДС': 85
@@ -1043,12 +1105,13 @@ class PreviewForm(PaymentFrame):
         # Show create buttons only for users with rights
         # to create (1) or approve + create (2)
         if self.user_info.AccessType in (1, 2):
-            bt1 = ttk.Button(bottom_cf, text="Добавить договор", width=20,
+            bt1 = ttk.Button(bottom_cf, text="Добавить", width=25,
                              command=lambda: controller._show_frame(
                                  'CreateForm'))
             bt1.pack(side=tk.LEFT, padx=10, pady=10)
 
-            bt2 = ttk.Button(bottom_cf, text="Добавить из договора", width=25,
+            bt2 = ttk.Button(bottom_cf, text="Добавить доп.согл. из договора",
+                             width=30,
                              command=self._create_from_current)
             bt2.pack(side=tk.LEFT, padx=10, pady=10)
 
@@ -1231,7 +1294,9 @@ class PreviewForm(PaymentFrame):
             # 'sumtotal_to': float(self.sumtotal_to.get_float_form()
             #                      if self.sum_entry_to.get() else 0),
             # 'nds':  self.nds.get(),
-            'statusID': (self.statusID[self.status_box.current()])
+            'statusID': (self.statusID[self.status_box.current()]),
+            'type_businessID': (
+                self.type_businessID[self.type_business_box.current()])
             # 'payment_num': self.search_by_num.get().strip()
         }
         # if not filters['date_m']:
@@ -1258,13 +1323,13 @@ class PreviewForm(PaymentFrame):
             self.table["displaycolumns"] = tuple(k for k in self.headings.keys()
                                                  if k not in (
                                                      'ID', 'НДС', 'Описание',
-                                                     'Офис', 'МВЗ',
+                                                     'Бизнес', 'Объект',
                                                      'InitiatorID',
                                                      'Инициатор', 'Кем создано'
                                                      , '№ заявки',
                                                      'Дата договора'
                                                      , 'Дата доп.согл.'
-                                                 ,'Имя файла'))
+                                                     , 'Имя файла'))
             for head, width in self.headings.items():
                 self.table.heading(head, text=head, anchor=tk.CENTER)
                 self.table.column(head, width=width, anchor=tk.CENTER)
@@ -1336,10 +1401,11 @@ class PreviewForm(PaymentFrame):
         # self.initiator_box.pack(side=tk.LEFT, padx=5, pady=5)
         self.mvz_label.pack(side=tk.LEFT)
         self.mvz_box.pack(side=tk.LEFT, padx=5, pady=5)
+        self.type_business_label.pack(side=tk.LEFT)
+        self.type_business_box.pack(side=tk.LEFT, padx=5, pady=5)
         self.status_label.pack(side=tk.LEFT)
         self.status_box.pack(side=tk.LEFT, padx=5, pady=5)
-        self.type_business_box.pack(side=tk.LEFT, padx=5, pady=5)
-        self.type_business_label.pack(side=tk.LEFT)
+
         self.bt3_2.pack(side=tk.RIGHT, padx=10)
         self.bt3_1.pack(side=tk.RIGHT, padx=10)
 
@@ -1482,13 +1548,12 @@ class DetailedPreview(tk.Frame):
         # filelink = str()
         for row in zip(range(len(head)), zip(head, info)):
             if row[1][0] not in ('№ п/п', 'ID', 'InitiatorID', 'Дата создания',
-                                 'ID Утверждающего', 'Утверждающий', 'Статус', 'Файл'):
+                                 'ID Утверждающего', 'Утверждающий', 'Статус',
+                                 'Файл'):
                 if row[1][0] == 'Имя файла' and (row[1][1] != 'None'
                                                  or row[1][1] is not None):
                     self.filename_preview = row[1][1]
                 self._newRow(self.table_frame, fonts, *row)
-
-
 
         # self.appr_label = tk.Label(self.top, text='Утверждающие',
         #                            padx=10, pady=5, font=('Arial', 10, 'bold'))
@@ -1517,7 +1582,6 @@ class DetailedPreview(tk.Frame):
                              command=self._open_file,
                              style='ButtonGreen.TButton')
             bt1.pack(side=tk.LEFT, padx=15, pady=5)
-
 
         bt2 = ttk.Button(self.bottom, text="Закрыть", width=10,
                          command=self.parent.destroy)

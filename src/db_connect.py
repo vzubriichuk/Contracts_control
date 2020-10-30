@@ -196,14 +196,15 @@ class DBConnect(object):
         return self.__cursor.fetchall()
 
     @monitor_network_state
-    def get_contracts_list(self, mvz=None, statusID=None):
+    def get_contracts_list(self, mvz=None, statusID=None, type_businessID=None):
         """ Get list contracts with filters.
         """
         query = '''
            exec contracts.get_contracts_list @MVZ = ?,
-                                             @StatusID = ?
+                                             @StatusID = ?,
+                                             @TypeBusinessID = ?
            '''
-        self.__cursor.execute(query, mvz, statusID)
+        self.__cursor.execute(query, mvz, statusID, type_businessID)
         contracts = self.__cursor.fetchall()
         self.__db.commit()
         return contracts
