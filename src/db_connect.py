@@ -87,8 +87,10 @@ class DBConnect(object):
                        sum_extra_total,
                        sumtotal, nds, square, contragent, okpo,
                        num_main_contract,
-                       num_add_contract, date_main_contract,
-                       date_add_contract, text, filename):
+                       num_add_contract, date_main_contract_start,
+                       date_add_contract, text, filename,
+                       date_main_contract_end,
+                       price_meter, type_business):
         """ Executes procedure that creates new request.
         """
         query = '''
@@ -107,20 +109,25 @@ class DBConnect(object):
                                     @DateMain = ?,
                                     @DateAdditional = ?,
                                     @Description = ?,
-                                    @Filename = ?
+                                    @Filename = ?,
+                                    @DateMainEnd = ?,
+                                    @PriceSquareMeter = ?,
+                                    @TypeBusiness = ?
             '''
         print(userID, mvz, start_date, finish_date,
-              sum_extra_total,
-              sumtotal, nds, square, contragent, okpo,
-              num_main_contract,
-              num_add_contract, date_main_contract,
-              date_add_contract, text, filename)
+              sum_extra_total, sumtotal, nds, square,
+              contragent, okpo, num_main_contract,
+              num_add_contract, date_main_contract_start,
+              date_add_contract, text, filename,
+              date_main_contract_end, price_meter, type_business)
         try:
-            self.__cursor.execute(query, userID, mvz,start_date,finish_date,
-                                  sum_extra_total,sumtotal, nds,square,
+            self.__cursor.execute(query, userID, mvz, start_date, finish_date,
+                                  sum_extra_total, sumtotal, nds, square,
                                   contragent, okpo, num_main_contract,
-                                  num_add_contract, date_main_contract,
-                                  date_add_contract, text, filename)
+                                  num_add_contract, date_main_contract_start,
+                                  date_add_contract, text, filename,
+                                  date_main_contract_end, price_meter,
+                                  type_business)
             request_allowed = self.__cursor.fetchone()[0]
             self.__db.commit()
             return request_allowed

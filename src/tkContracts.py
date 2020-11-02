@@ -394,6 +394,7 @@ class PaymentFrame(tk.Frame):
         varname = str(event.widget.cget("textvariable"))
         sum_entry = event.widget.get().replace(' ', '')
         event.widget.setvar(varname, sum_entry)
+        self._multiply_cost_square()
 
     def _on_focus_out_format_sum(self, event):
         """ Convert float into str in binded to entry variable when focus out.
@@ -403,6 +404,7 @@ class PaymentFrame(tk.Frame):
         sum_entry = float(event.widget.get().replace(',', '.'))
         varname = str(event.widget.cget("textvariable"))
         event.widget.setvar(varname, self._format_float(sum_entry))
+        self._multiply_cost_square()
 
     def _validate_sum(self, sum_entry):
         """ Validation of entries that contains sum. """
@@ -419,6 +421,9 @@ class PaymentFrame(tk.Frame):
 
     def get_offices(self, mvz):
         return self.mvz[mvz][1]
+
+    def _multiply_cost_square(self):
+        pass
 
 
 class CreateForm(PaymentFrame):
@@ -451,7 +456,7 @@ class CreateForm(PaymentFrame):
                                       *self.mvz.keys(),
                                       command=self._restraint_by_mvz)
         self.mvz_box.config(width=40)
-        self.mvz_sap_label = tk.Label(row1_cf, text='SAP', padx=10)
+        self.mvz_sap_label = tk.Label(row1_cf, text='SAPmvz', padx=10)
         self.mvz_sap = tk.Label(row1_cf, padx=10, bg='lightgray', width=11)
         self.square = StringSumVar()
         self.square.set('0,00')
@@ -463,8 +468,6 @@ class CreateForm(PaymentFrame):
                                      )
         self.square_entry.bind("<FocusIn>", self._on_focus_in_format_sum)
         self.square_entry.bind("<FocusOut>", self._on_focus_out_format_sum)
-        self.square_entry.bind("<FocusIn>", self._multiply_cost_square)
-        self.square_entry.bind("<FocusOut>", self._multiply_cost_square)
 
         self._row1_pack()
 
@@ -494,8 +497,8 @@ class CreateForm(PaymentFrame):
                                           validate='all',
                                           validatecommand=(vcmd, '%P')
                                           )
-        self.square_cost_entry.bind("<FocusIn>", self._multiply_cost_square)
-        self.square_cost_entry.bind("<FocusOut>",self._multiply_cost_square)
+        self.square_cost_entry.bind("<FocusIn>", self._on_focus_in_format_sum)
+        self.square_cost_entry.bind("<FocusOut>", self._on_focus_out_format_sum)
 
         self._row2_pack()
 
@@ -522,7 +525,8 @@ class CreateForm(PaymentFrame):
         self.sum_extra_total = StringSumVar()
         self.sum_extra_total.set('0,00')
         vcmd = (self.register(self._validate_sum))
-        self.sum_extra_entry = tk.Entry(row3_cf, name='sum_extra_entry', width=18,
+        self.sum_extra_entry = tk.Entry(row3_cf, name='sum_extra_entry',
+                                        width=18,
                                         textvariable=self.sum_extra_total,
                                         validate='all',
                                         validatecommand=(vcmd, '%P')
@@ -554,7 +558,15 @@ class CreateForm(PaymentFrame):
         #                           validatecommand=(vcmd, '%P')
         #                           )
         self.sumtotal = tk.StringVar(row4_cf, value='0.00')
-        self.sum_entry = tk.Entry(row4_cf, textvariable=self.sumtotal, width=18)
+        vcmd = (self.register(self._validate_sum))
+        # self.sum_entry = tk.Entry(row4_cf, textvariable=self.sumtotal, width=18)
+        self.sum_entry = tk.Entry(row4_cf, name='sum_entry',
+                                  width=18,
+                                  textvariable=self.sumtotal,
+                                  validate='all',
+                                  validatecommand=(vcmd, '%P')
+                                  )
+        self.sum_entry.config(background='lightgrey')
         # self.sum_entry.config(state='disabled')
 
         self.sum_entry.bind("<FocusIn>", self._on_focus_in_format_sum)
@@ -599,7 +611,7 @@ class CreateForm(PaymentFrame):
                                            font=('Arial', 9),
                                            selectmode='day', borderwidth=2,
                                            locale='ru_RU')
-
+        self.file_label = tk.Label(row6_cf, text='Файл не выбран')
         bt_upload = ttk.Button(row6_cf, text="Выбрать файл", width=20,
                                command=self._file_opener,
                                style='ButtonGreen.TButton')
@@ -620,8 +632,8 @@ class CreateForm(PaymentFrame):
         bottom_cf = tk.Frame(self, name='bottom_cf')
 
         bt3 = ttk.Button(bottom_cf, text="Назад", width=10,
-                         command=self._multiply_cost_square)
-        # command=lambda: controller._show_frame('PreviewForm'))
+                         # command=self._multiply_cost_square)
+                         command=lambda: controller._show_frame('PreviewForm'))
         bt3.pack(side=tk.RIGHT, padx=15, pady=10)
 
         bt2 = ttk.Button(bottom_cf, text="Очистить", width=10,
@@ -661,21 +673,22 @@ class CreateForm(PaymentFrame):
             copy2(filename, UPLOAD_PATH)
             path = Path(filename)
             self.upload_filename = path.name
+            self.file_label.config(text='Файл добавлен')
 
     def _remove_upload_file(self):
         os.remove(UPLOAD_PATH + '\\' + self.upload_filename)
-        # self._show_frame('PreviewForm')
+        self.file_label.config(text='Файл не выбран')
 
-    def _multiply_cost_square(self, event):
+    def _multiply_cost_square(self):
         square_get = float(self.square.get_float_form()
                            if self.square_entry.get() else 0)
         square_cost_get = float(self.square_cost.get_float_form()
                                 if self.square_cost_entry.get() else 0)
         total_square_cost = square_get * square_cost_get
-        if event:
+        if total_square_cost:
             self.sum_entry.delete(0, tk.END)
             self.sum_entry.insert(0, total_square_cost)
-            self.sum_entry.bind("<FocusOut>", self._on_focus_out_format_sum)
+            # self.sum_entry.bind("<FocusOut>", self._on_focus_out_format_sum)
 
     def _clear(self):
         self.mvz_current.set('')
@@ -684,6 +697,7 @@ class CreateForm(PaymentFrame):
         # self.office_box.configure(state="disabled")
         self.contragent_entry.delete(0, tk.END)
         self.square.set('0,00')
+        self.square_cost_entry.delete(0, tk.END)
         self.num_main_contract_entry.delete(0, tk.END)
         self.num_add_contract_entry.delete(0, tk.END)
         self.okpo_entry.delete(0, tk.END)
@@ -694,7 +708,9 @@ class CreateForm(PaymentFrame):
         self.date_start_entry.set_date(datetime.now())
         self.date_finish_entry.set_date(datetime.now())
         self.date_add_contract.set_date(datetime.now())
-        self.date_main_contract.set_date(datetime.now())
+        self.date_main_contract_start.set_date(datetime.now())
+        self.date_main_contract_end.set_date(datetime.now())
+        # self._remove_upload_file()
 
     def _convert_date(self, date, output=None):
         """ Take date and convert it into output format.
@@ -714,12 +730,13 @@ class CreateForm(PaymentFrame):
 
     def _create_request(self):
         messagetitle = 'Добавление договора'
-        sumtotal = float(self.sumtotal.get_float_form()
-                         if self.sum_entry.get() else 0)
+        sumtotal = self.sum_entry.get()
         sum_extra_total = float(self.sum_extra_total.get_float_form()
                                 if self.sum_extra_entry.get() else 0)
         square = float(self.square.get_float_form()
                        if self.square_entry.get() else 0)
+        price_meter = float(self.square_cost.get_float_form()
+                            if self.square_cost_entry.get() else 0)
         is_validated = self._validate_request_creation(messagetitle, sumtotal)
         if not is_validated:
             return
@@ -740,12 +757,17 @@ class CreateForm(PaymentFrame):
                    'okpo': self.okpo_entry.get(),
                    'num_main_contract': self.num_main_contract_entry.get(),
                    'num_add_contract': self.num_add_contract_entry.get(),
-                   'date_main_contract': self._convert_date(
-                       self.date_main_contract.get()),
+                   'date_main_contract_start': self._convert_date(
+                       self.date_main_contract_start.get()),
                    'date_add_contract': self._convert_date(
                        self.date_add_contract.get()),
                    'text': self.desc_text.get("1.0", tk.END).strip(),
-                   'filename': self.upload_filename
+                   'filename': self.upload_filename,
+                   'date_main_contract_end': self._convert_date(
+                       self.date_main_contract_end.get()),
+                   'price_meter': price_meter,
+                   'type_business': self.type_business_box.get()
+
                    }
         created_success = self.conn.create_request(userID=self.userID,
                                                    **request)
@@ -764,7 +786,7 @@ class CreateForm(PaymentFrame):
         #             .format(dat)
         #     )
         else:
-            self._remove_upload_file()
+            # self._remove_upload_file()
             messagebox.showerror(
                 messagetitle, 'Произошла ошибка при добавлении договора'
             )
@@ -861,6 +883,7 @@ class CreateForm(PaymentFrame):
         self.okpo_entry.pack(side=tk.LEFT, padx=7)
         self.date_finish_label.pack(side=tk.LEFT)
         self.date_finish_entry.pack(side=tk.LEFT, padx=0)
+        self.file_label.pack(side=tk.RIGHT, padx=0)
 
     def _top_pack(self):
         self.main_label.pack(side=tk.TOP, expand=False, anchor=tk.NW)
@@ -872,7 +895,12 @@ class CreateForm(PaymentFrame):
         """ Check if all fields are filled properly. """
         if not self.mvz_current.get():
             messagebox.showerror(
-                messagetitle, 'Не указано МВЗ'
+                messagetitle, 'Не выбран объект'
+            )
+            return False
+        if not self.type_business_box.get():
+            messagebox.showerror(
+                messagetitle, 'Не выбран тип бизнеса'
             )
             return False
         if not self.num_main_contract_entry.get():
@@ -894,11 +922,10 @@ class CreateForm(PaymentFrame):
             messagebox.showerror(
                 messagetitle, 'Не указана площадь аренды'
             )
-            print(ast.literal_eval(self.square_entry.get()[0]))
             return False
-        if not sumtotal:
+        if ast.literal_eval(self.square_cost_entry.get()[0]) == 0:
             messagebox.showerror(
-                messagetitle, 'Не указана сумма договора'
+                messagetitle, 'Не указана стоимость за 1 кв.м.'
             )
             return False
         # date_validation = self._validate_plan_date()
@@ -1070,7 +1097,7 @@ class PreviewForm(PaymentFrame):
 
         # column name and width
         self.headings = {'№ п/п': 30, 'ID': 0, 'InitiatorID': 0,
-                         'Кем создано': 80, 'Дата внесения': 80, 'SAP': 70,
+                         'Кем создано': 80, 'Дата внесения': 80, 'SAPmvz': 70,
                          'Объект': 0, 'Бизнес': 0, 'Арендодатель': 130,
                          '№ договора': 80
             , 'Дата договора': 0, '№ доп.согл.': 80, 'Дата доп.согл.': 0
