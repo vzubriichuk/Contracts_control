@@ -301,15 +301,20 @@ class PaymentApp(tk.Tk):
 
         self.geometry('{}x{}+{}+{}'.format(w, h, start_x, start_y))
 
-    def _fill_CreateForm(self, МВЗ, **kwargs):
+    def _fill_CreateForm(self, Объект, **kwargs):
         """ Control function to transfer data from Preview- to CreateForm. """
+        # print(kwargs)
         num_main_contract_heading = kwargs['№ договора']
-        date_main_contract_heading = kwargs['Дата договора']
+        date_main_contract_heading = kwargs['Дата договора (начало)']
+        date_main_contract_heading_end = kwargs['Дата договора (конец)']
         contragent_heading = kwargs['Арендодатель']
+        type_business = kwargs['Бизнес']
+        okpo = kwargs['ЕГРПОУ']
         frame = self._frames['CreateForm']
-        frame._fill_from_PreviewForm(МВЗ, num_main_contract_heading,
+        frame._fill_from_PreviewForm(Объект, num_main_contract_heading,
                                      date_main_contract_heading,
-                                     contragent_heading)
+                                     date_main_contract_heading_end,
+                                     contragent_heading, type_business, okpo)
 
     def _onKeyRelease(*args):
         event = args[1]
@@ -802,19 +807,29 @@ class CreateForm(PaymentFrame):
         return date_time_obj.date()
 
     def _fill_from_PreviewForm(self, mvz, num_main_contract_entry,
-                               date_main_contract
-                               , contragent):
+                               date_main_contract_start, date_main_contract_end
+                               , contragent, type_business, okpo):
         """ When button "Добавить из договора" from PreviewForm is activated,
         fill some fields taken from choosed in PreviewForm request.
         """
         self._clear()
         self.mvz_current.set(mvz)
+        self.type_business_box.set(type_business)
+        self.type_business_box.configure(state="disabled")
         self.num_main_contract_entry.insert(0, num_main_contract_entry)
-        self.date_main_contract.set_date(
-            self._convert_str_date(date_main_contract))
+        self.num_main_contract_entry.configure(state="disabled")
+        self.date_main_contract_start.set_date(
+            self._convert_str_date(date_main_contract_start))
+        self.date_main_contract_start.configure(state="disabled")
+        self.date_main_contract_end.set_date(
+            self._convert_str_date(date_main_contract_end))
+        self.date_main_contract_end.configure(state="disabled")
         self.mvz_sap.config(text=self.get_mvzSAP(self.mvz_current.get()) or '')
         self.contragent_entry.insert(0, contragent)
-        # self.okpo_entry.insert(0, okpo)
+        self.contragent_entry.configure(state="disabled")
+        self.okpo_entry.insert(0, okpo)
+        self.square_cost.set('0,00')
+
         # self.desc_text.insert('end',
         #                       description.strip() if type(description) == str
         #                       else description)
@@ -1099,9 +1114,12 @@ class PreviewForm(PaymentFrame):
         self.headings = {'№ п/п': 30, 'ID': 0, 'InitiatorID': 0,
                          'Кем создано': 80, 'Дата внесения': 80, 'SAPmvz': 70,
                          'Объект': 0, 'Бизнес': 0, 'Арендодатель': 130,
+                         'ЕГРПОУ': 0,
                          '№ договора': 80
-            , 'Дата договора': 0, '№ доп.согл.': 80, 'Дата доп.согл.': 0
-            , 'Дата с': 80, 'Дата по': 90, 'Площадь': 50, 'Сумма без НДС': 85
+            , 'Дата договора (начало)': 0, 'Дата договора (конец)': 0
+            , '№ доп.согл.': 80, 'Дата доп.согл.': 0
+            , 'Дата с': 80, 'Дата по': 90, 'Площадь': 50, 'Цена за 1 кв.м.': 0
+            , 'Сумма без НДС': 85
             , 'Сумма с НДС': 85, 'Файл': 30, 'Имя файла': 0, 'Статус': 120
             , 'Описание': 12
                          }
@@ -1251,13 +1269,13 @@ class PreviewForm(PaymentFrame):
         elif new_state == 'Show payments for approval':
             self.get_payments = self._get_payments_for_approval
 
-    def _check_rights_to_fill_CreateForm(self, to_fill):
-        try:
-            allowed_offices = self.get_offices(to_fill['МВЗ'])
-            if to_fill['Офис'] not in allowed_offices:
-                raise NoRightsToFillCreateFormError(to_fill['Офис'])
-        except KeyError:
-            raise NoRightsToFillCreateFormError(to_fill['МВЗ'])
+    # def _check_rights_to_fill_CreateForm(self, to_fill):
+    #     try:
+    #         allowed_offices = self.get_offices(to_fill['МВЗ'])
+    #         if to_fill['Офис'] not in allowed_offices:
+    #             raise NoRightsToFillCreateFormError(to_fill['Офис'])
+    #     except KeyError:
+    #         raise NoRightsToFillCreateFormError(to_fill['МВЗ'])
 
     def _clear_filters(self):
         # self.initiator_box.set('Все')
@@ -1281,14 +1299,23 @@ class PreviewForm(PaymentFrame):
             to_fill = dict(zip(self.table["columns"],
                                self.table.item(curRow).get('values')))
             # print(to_fill)
-            try:
-                self._check_rights_to_fill_CreateForm(to_fill)
-            except NoRightsToFillCreateFormError as e:
-                messagebox.showerror(self.controller.title(),
-                                     e.message + '\n' + e.expression)
-                return
+            # try:
+            #     self._check_rights_to_fill_CreateForm(to_fill)
+            # except NoRightsToFillCreateFormError as e:
+            #     messagebox.showerror(self.controller.title(),
+            #                          e.message + '\n' + e.expression)
+            #     return
             self.controller._fill_CreateForm(**to_fill)
             self.controller._show_frame('CreateForm')
+
+    def _delete_current(self):
+        """ Raises CreateForm with partially filled labels/entries. """
+        curRow = self.table.focus()
+
+        if curRow:
+            # extract info to be putted in CreateForm
+            to_fill = dict(zip(self.table["columns"],
+                               self.table.item(curRow).get('values')))
 
     def _export_to_excel(self):
         if not self.rows:
@@ -1354,8 +1381,11 @@ class PreviewForm(PaymentFrame):
                                                      'InitiatorID',
                                                      'Инициатор', 'Кем создано'
                                                      , '№ заявки',
-                                                     'Дата договора'
+                                                     'Дата договора (начало)',
+                                                     'Дата договора (конец)'
+                                                     , 'ЕГРПОУ'
                                                      , 'Дата доп.согл.'
+                                                     , 'Цена за 1 кв.м.'
                                                      , 'Имя файла'))
             for head, width in self.headings.items():
                 self.table.heading(head, text=head, anchor=tk.CENTER)
@@ -1558,8 +1588,8 @@ class DetailedPreview(tk.Frame):
         self.parent = parent
         self.parentform = parentform
         self.conn = conn
-        self.approveclass_bool = isinstance(self, ApproveConfirmation)
-        self.paymentID, self.initiatorID = info[1:3]
+        # self.approveclass_bool = isinstance(self, ApproveConfirmation)
+        self.contractID, self.initiatorID = info[1:3]
         self.userID = userID
         self.rowtags = tags
         self.filename_preview = str()
@@ -1615,17 +1645,18 @@ class DetailedPreview(tk.Frame):
         bt2.pack(side=tk.RIGHT, padx=15, pady=5)
 
         # if self.userID == self.initiatorID and 'Отозв.' not in self.rowtags:
-        #     bt3 = ttk.Button(self.bottom, text="Отозвать", width=10,
-        #                      command=self._discard)
-        #     bt3.pack(side=tk.RIGHT, padx=15, pady=5)
+        bt3 = ttk.Button(self.bottom, text="Удалить договор", width=18,
+                         command=self._delete)
+        bt3.pack(side=tk.RIGHT, padx=15, pady=5)
 
-    def _discard(self):
-        mboxname = 'Отзыв заявки'
+    def _delete(self):
+        mboxname = 'Удаление договора'
         confirmed = messagebox.askyesno(title=mboxname,
-                                        message='Вы уверены, что хотите отозвать заявку?')
+                                        message='Вы уверены, что хотите удалить '
+                                                'этот договор?')
         if confirmed:
-            self.conn.update_discarded(self.paymentID)
-            messagebox.showinfo(mboxname, 'Заявка отозвана')
+            self.conn.delete_contract(self.contractID)
+            messagebox.showinfo(mboxname, 'Договор удален')
             self.parentform._refresh()
             self.parent.destroy()
 
@@ -1633,7 +1664,7 @@ class DetailedPreview(tk.Frame):
         """ Adds a new line to the table. """
 
         numberOfLines = []  # List to store number of lines needed
-        columnWidths = [20, 50]  # Width of the different columns in the table
+        columnWidths = [23, 50]  # Width of the different columns in the table
 
         # Find the length and the number of lines of each element and column
         for index, item in enumerate(info):
@@ -1671,21 +1702,21 @@ class DetailedPreview(tk.Frame):
         self.pack()
 
 
-class ApproveConfirmation(DetailedPreview):
-    """ Class with information about reuqest that contains buttons
-        to approval/decline it. """
-
-    def __init__(self, parent, parentform, conn, userID, head, info, tags):
-        super().__init__(parent, parentform, conn, userID, head, info, tags)
-
-    def _close(self, is_approved):
-        confirmed = messagebox.askyesno(title='Подтвердите действие',
-                                        message='{} заявку?'.format(
-                                            'Утвердить' if is_approved else 'Отклонить'))
-        if confirmed:
-            self.conn.update_confirmed(self.userID, self.paymentID, is_approved)
-            self.parentform._refresh()
-            self.parent.destroy()
+# class ApproveConfirmation(DetailedPreview):
+#     """ Class with information about reuqest that contains buttons
+#         to approval/decline it. """
+#
+#     def __init__(self, parent, parentform, conn, userID, head, info, tags):
+#         super().__init__(parent, parentform, conn, userID, head, info, tags)
+#
+#     def _close(self, is_approved):
+#         confirmed = messagebox.askyesno(title='Подтвердите действие',
+#                                         message='{} заявку?'.format(
+#                                             'Утвердить' if is_approved else 'Отклонить'))
+#         if confirmed:
+#             self.conn.update_confirmed(self.userID, self.paymentID, is_approved)
+#             self.parentform._refresh()
+#             self.parent.destroy()
 
 
 class AboutFrame(tk.Frame):
@@ -1818,122 +1849,122 @@ class AlterLimits(tk.Frame):
             )
 
 
-class AlterRequest(tk.Frame):
-    """ Creates a frame to alter chosen request. """
-
-    def __init__(self, parent, parentform, conn, userID, request_info):
-        super().__init__(parent)
-        self.parent = parent
-        self.parentform = parentform
-        self.conn = conn
-        self.userID = userID
-        self.paymentID, self.request_date_str, self.request_sum = request_info
-        self.request_date = datetime.strptime(self.request_date_str,
-                                              '%Y-%m-%d').date()
-
-        # Top Frame with table
-        self.top = tk.Frame(self, name='top_ar')
-        self.top_label = tk.Label(self.top,
-                                  text='Измените необходимое поле:',
-                                  font=('Arial', 10, 'bold'))
-
-        self.altdata_head_label = tk.Label(self.top,
-                                           text='Изменение даты',
-                                           font=('Arial', 9, 'bold'), padx=10)
-        self.altdata_label = tk.Label(self.top,
-                                      text=(
-                                          'Укажите новую дату +/- 7 дней в пределах месяца. '
-                                          'Первичная дата:'),
-                                      font=('Arial', 9), padx=10)
-        self.date_start = tk.StringVar()
-        self.date_start_entry = DateEntry(self.top, width=12, state='readonly',
-                                          textvariable=self.date_start,
-                                          font=('Arial', 9),
-                                          selectmode='day', borderwidth=2,
-                                          locale='ru_RU')
-        self.date_start_entry.set_date(self.request_date)
-
-        self.altsum_head_label = tk.Label(self.top,
-                                          text='Изменение суммы',
-                                          font=('Arial', 9, 'bold'), padx=10)
-        self.altsum_label = tk.Label(self.top,
-                                     text='Укажите сумму без НДС. Первичная сумма:',
-                                     font=('Arial', 9), padx=10)
-        self.sumtotal = StringSumVar()
-        self.altsum_entry = tk.Entry(self.top, width=12,
-                                     textvariable=self.sumtotal)
-        self.sumtotal.set(self.request_sum)
-
-        # Bottom Frame with buttons
-        self.bottom = tk.Frame(self, name='bottom_ar')
-
-        bt2 = ttk.Button(self.bottom, text="Отменить", width=10,
-                         style='ButtonRed.TButton',
-                         command=self.parent.destroy)
-        bt2.pack(side=tk.RIGHT, padx=15, pady=5)
-
-        bt1 = ttk.Button(self.bottom, text="Сохранить", width=10,
-                         style='ButtonGreen.TButton',
-                         command=self._apply_changes)
-        bt1.pack(side=tk.LEFT, padx=15, pady=5)
-        self._pack_frames()
-
-    def _apply_changes(self):
-        try:
-            self._validate_changes()
-        except (IncorrectFloatError, PeriodExceededError,
-                MonthChangedError, SumExceededError) as e:
-            messagebox.showerror(self.parent.title(),
-                                 e.message + '\n' + e.expression)
-            return
-        new_date = self.date_start_entry.get_date()
-        # convert to datetime for SQL
-        new_date = datetime.combine(new_date, datetime.min.time())
-        new_sum = Decimal(self.sumtotal.get_float_form()).quantize(
-            Decimal('.01'))
-        result = self.conn.alter_payment(self.userID, self.paymentID,
-                                         new_date, new_sum)
-        if not result:
-            messagebox.showerror(self.parent.title(),
-                                 'Произошла ошибка при выполнении запроса')
-        else:
-            messagebox.showinfo(self.parent.title(), 'Запрос выполнен')
-            self.parentform._refresh()
-            self.parent.destroy()
-
-    def _pack_frames(self):
-        self.top_label.pack(side=tk.TOP)
-        self.altdata_head_label.pack(side=tk.TOP)
-        self.altdata_label.pack(side=tk.TOP)
-        self.date_start_entry.pack(side=tk.TOP, pady=5)
-        self.altsum_head_label.pack(side=tk.TOP)
-        self.altsum_label.pack(side=tk.TOP)
-        self.altsum_entry.pack(side=tk.TOP)
-        self.top.pack(side=tk.TOP, fill=tk.X, expand=False, padx=4, pady=2)
-        self.bottom.pack(side=tk.BOTTOM, fill=tk.X, expand=False)
-        self.pack()
-
-    def _validate_changes(self):
-        new_date = self.date_start_entry.get_date()
-        # Input check
-        try:
-            new_sum = Decimal(self.sumtotal.get_float_form()).quantize(
-                Decimal('.01'))
-        except ValueError:
-            raise IncorrectFloatError(self.sumtotal.get())
-        date_diff = (self.request_date - new_date)
-        # check if period is not exceeded
-        if abs(date_diff.days) > 7:
-            raise PeriodExceededError(str((date_diff.days,
-                                           self.request_date,
-                                           new_date))
-                                      )
-        # check if month is the same
-        if self.request_date.month != new_date.month:
-            raise MonthChangedError(str(self.request_date))
-        # check if sum is not exceeded
-        if new_sum > self.request_sum:
-            raise SumExceededError(str(self.request_sum))
+# class AlterRequest(tk.Frame):
+#     """ Creates a frame to alter chosen request. """
+#
+#     def __init__(self, parent, parentform, conn, userID, request_info):
+#         super().__init__(parent)
+#         self.parent = parent
+#         self.parentform = parentform
+#         self.conn = conn
+#         self.userID = userID
+#         self.paymentID, self.request_date_str, self.request_sum = request_info
+#         self.request_date = datetime.strptime(self.request_date_str,
+#                                               '%Y-%m-%d').date()
+#
+#         # Top Frame with table
+#         self.top = tk.Frame(self, name='top_ar')
+#         self.top_label = tk.Label(self.top,
+#                                   text='Измените необходимое поле:',
+#                                   font=('Arial', 10, 'bold'))
+#
+#         self.altdata_head_label = tk.Label(self.top,
+#                                            text='Изменение даты',
+#                                            font=('Arial', 9, 'bold'), padx=10)
+#         self.altdata_label = tk.Label(self.top,
+#                                       text=(
+#                                           'Укажите новую дату +/- 7 дней в пределах месяца. '
+#                                           'Первичная дата:'),
+#                                       font=('Arial', 9), padx=10)
+#         self.date_start = tk.StringVar()
+#         self.date_start_entry = DateEntry(self.top, width=12, state='readonly',
+#                                           textvariable=self.date_start,
+#                                           font=('Arial', 9),
+#                                           selectmode='day', borderwidth=2,
+#                                           locale='ru_RU')
+#         self.date_start_entry.set_date(self.request_date)
+#
+#         self.altsum_head_label = tk.Label(self.top,
+#                                           text='Изменение суммы',
+#                                           font=('Arial', 9, 'bold'), padx=10)
+#         self.altsum_label = tk.Label(self.top,
+#                                      text='Укажите сумму без НДС. Первичная сумма:',
+#                                      font=('Arial', 9), padx=10)
+#         self.sumtotal = StringSumVar()
+#         self.altsum_entry = tk.Entry(self.top, width=12,
+#                                      textvariable=self.sumtotal)
+#         self.sumtotal.set(self.request_sum)
+#
+#         # Bottom Frame with buttons
+#         self.bottom = tk.Frame(self, name='bottom_ar')
+#
+#         bt2 = ttk.Button(self.bottom, text="Отменить", width=10,
+#                          style='ButtonRed.TButton',
+#                          command=self.parent.destroy)
+#         bt2.pack(side=tk.RIGHT, padx=15, pady=5)
+#
+#         bt1 = ttk.Button(self.bottom, text="Сохранить", width=10,
+#                          style='ButtonGreen.TButton',
+#                          command=self._apply_changes)
+#         bt1.pack(side=tk.LEFT, padx=15, pady=5)
+#         self._pack_frames()
+#
+#     def _apply_changes(self):
+#         try:
+#             self._validate_changes()
+#         except (IncorrectFloatError, PeriodExceededError,
+#                 MonthChangedError, SumExceededError) as e:
+#             messagebox.showerror(self.parent.title(),
+#                                  e.message + '\n' + e.expression)
+#             return
+#         new_date = self.date_start_entry.get_date()
+#         # convert to datetime for SQL
+#         new_date = datetime.combine(new_date, datetime.min.time())
+#         new_sum = Decimal(self.sumtotal.get_float_form()).quantize(
+#             Decimal('.01'))
+#         result = self.conn.alter_payment(self.userID, self.paymentID,
+#                                          new_date, new_sum)
+#         if not result:
+#             messagebox.showerror(self.parent.title(),
+#                                  'Произошла ошибка при выполнении запроса')
+#         else:
+#             messagebox.showinfo(self.parent.title(), 'Запрос выполнен')
+#             self.parentform._refresh()
+#             self.parent.destroy()
+#
+#     def _pack_frames(self):
+#         self.top_label.pack(side=tk.TOP)
+#         self.altdata_head_label.pack(side=tk.TOP)
+#         self.altdata_label.pack(side=tk.TOP)
+#         self.date_start_entry.pack(side=tk.TOP, pady=5)
+#         self.altsum_head_label.pack(side=tk.TOP)
+#         self.altsum_label.pack(side=tk.TOP)
+#         self.altsum_entry.pack(side=tk.TOP)
+#         self.top.pack(side=tk.TOP, fill=tk.X, expand=False, padx=4, pady=2)
+#         self.bottom.pack(side=tk.BOTTOM, fill=tk.X, expand=False)
+#         self.pack()
+#
+#     def _validate_changes(self):
+#         new_date = self.date_start_entry.get_date()
+#         # Input check
+#         try:
+#             new_sum = Decimal(self.sumtotal.get_float_form()).quantize(
+#                 Decimal('.01'))
+#         except ValueError:
+#             raise IncorrectFloatError(self.sumtotal.get())
+#         date_diff = (self.request_date - new_date)
+#         # check if period is not exceeded
+#         if abs(date_diff.days) > 7:
+#             raise PeriodExceededError(str((date_diff.days,
+#                                            self.request_date,
+#                                            new_date))
+#                                       )
+#         # check if month is the same
+#         if self.request_date.month != new_date.month:
+#             raise MonthChangedError(str(self.request_date))
+#         # check if sum is not exceeded
+#         if new_sum > self.request_sum:
+#             raise SumExceededError(str(self.request_sum))
 
 
 if __name__ == '__main__':

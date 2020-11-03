@@ -232,41 +232,12 @@ class DBConnect(object):
         return self.__cursor.fetchall()
 
     @monitor_network_state
-    def update_confirmed(self, userID, paymentID, is_approved):
-        """ Adds information to db if paymentID has been approved.
+    def delete_contract(self, deleteID):
+        """ Set status of contract to "delete".
         """
-        query = '''
-        exec payment.approve_request @UserID = ?,
-                                     @paymentID = ?,
-                                     @is_approved = ?
-        '''
-        self.__cursor.execute(query, userID, paymentID, is_approved)
+        query = "exec contracts.delete_contract @contractID = ?"
+        self.__cursor.execute(query, deleteID)
         self.__db.commit()
-
-    @monitor_network_state
-    def update_discarded(self, discardID):
-        """ Set status of request to "discarded".
-        """
-        query = "exec payment.discard_request @paymentID = ?"
-        self.__cursor.execute(query, discardID)
-        self.__db.commit()
-
-    @monitor_network_state
-    def update_limits(self, limits):
-        """ Update user limits.
-        """
-        query = '''
-        UPDATE payment.People
-        SET resetCreateRequestLimit = ?, userCreateRequestLimit = ?
-        where UserID = ?
-        '''
-        limits = [tuple(reversed(info)) for info in limits]
-        try:
-            self.__cursor.executemany(query, limits)
-            self.__db.commit()
-            return 1
-        except pyodbc.ProgrammingError:
-            return 0
 
 
 if __name__ == '__main__':
