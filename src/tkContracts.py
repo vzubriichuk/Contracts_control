@@ -623,7 +623,7 @@ class CreateForm(PaymentFrame):
         bt_upload.pack(side=tk.RIGHT, padx=15, pady=0)
 
         # Text Frame
-        text_cf = ttk.LabelFrame(self, text=' Описание заявки ', name='text_cf')
+        text_cf = ttk.LabelFrame(self, text=' Комментарий к договору ', name='text_cf')
 
         self.customFont = tkFont.Font(family="Arial", size=10)
         self.desc_text = tk.Text(text_cf,
@@ -1118,7 +1118,7 @@ class PreviewForm(PaymentFrame):
                          '№ договора': 80
             , 'Дата договора (начало)': 0, 'Дата договора (конец)': 0
             , '№ доп.согл.': 80, 'Дата доп.согл.': 0
-            , 'Дата с': 80, 'Дата по': 90, 'Площадь': 50, 'Цена за 1 кв.м.': 0
+            , 'Дата с': 80, 'Дата по': 90, 'Площадь': 50, 'Цена за м2': 70
             , 'Сумма без НДС': 85
             , 'Сумма с НДС': 85, 'Файл': 30, 'Имя файла': 0, 'Статус': 120
             , 'Описание': 12
@@ -1385,7 +1385,7 @@ class PreviewForm(PaymentFrame):
                                                      'Дата договора (конец)'
                                                      , 'ЕГРПОУ'
                                                      , 'Дата доп.согл.'
-                                                     , 'Цена за 1 кв.м.'
+                                                     # , 'Цена за 1 кв.м.'
                                                      , 'Имя файла'))
             for head, width in self.headings.items():
                 self.table.heading(head, text=head, anchor=tk.CENTER)
