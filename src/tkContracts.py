@@ -482,6 +482,7 @@ class CreateForm(PaymentFrame):
         self.type_business_box = ttk.Combobox(row2_cf, width=20,
                                               state='readonly')
         self.type_business_box['values'] = self.type_business
+        self.type_business_box.configure(state="normal")
         self.date_main_label_start = tk.Label(row2_cf, text='Договор с:',
                                               padx=12)
         self.date_main_start = tk.StringVar()
@@ -494,7 +495,7 @@ class CreateForm(PaymentFrame):
                                                   locale='ru_RU')
         self.square_cost = StringSumVar()
         self.square_cost.set('0,00')
-        self.square_cost_label = tk.Label(row2_cf, text='Цена за 1м2, грн')
+        self.square_cost_label = tk.Label(row2_cf, text='Цена за 1м², грн')
         vcmd = (self.register(self._validate_sum))
         self.square_cost_entry = tk.Entry(row2_cf, name='square_cost_entry',
                                           width=18,
@@ -715,7 +716,13 @@ class CreateForm(PaymentFrame):
         self.date_add_contract.set_date(datetime.now())
         self.date_main_contract_start.set_date(datetime.now())
         self.date_main_contract_end.set_date(datetime.now())
-        # self._remove_upload_file()
+        self.type_business_box.configure(state="readonly")
+        self.num_main_contract_entry.configure(state="normal")
+        self.date_main_contract_start.configure(state="normal")
+        self.date_main_contract_end.configure(state="normal")
+        self.contragent_entry.configure(state="normal")
+
+
 
     def _convert_date(self, date, output=None):
         """ Take date and convert it into output format.
@@ -816,17 +823,19 @@ class CreateForm(PaymentFrame):
         self.mvz_current.set(mvz)
         self.type_business_box.set(type_business)
         self.type_business_box.configure(state="disabled")
+        self.num_main_contract_entry.delete(0, tk.END)
         self.num_main_contract_entry.insert(0, num_main_contract_entry)
-        self.num_main_contract_entry.configure(state="disabled")
+        self.num_main_contract_entry.configure(state="readonly")
         self.date_main_contract_start.set_date(
             self._convert_str_date(date_main_contract_start))
-        self.date_main_contract_start.configure(state="disabled")
+        self.date_main_contract_start.configure(state="readonly")
         self.date_main_contract_end.set_date(
             self._convert_str_date(date_main_contract_end))
-        self.date_main_contract_end.configure(state="disabled")
+        self.date_main_contract_end.configure(state="readonly")
         self.mvz_sap.config(text=self.get_mvzSAP(self.mvz_current.get()) or '')
+        self.contragent_entry.delete(0, tk.END)
         self.contragent_entry.insert(0, contragent)
-        self.contragent_entry.configure(state="disabled")
+        self.contragent_entry.configure(state="readonly")
         self.okpo_entry.insert(0, okpo)
         self.square_cost.set('0,00')
 
@@ -1118,7 +1127,7 @@ class PreviewForm(PaymentFrame):
                          '№ договора': 80
             , 'Дата договора (начало)': 0, 'Дата договора (конец)': 0
             , '№ доп.согл.': 80, 'Дата доп.согл.': 0
-            , 'Дата с': 80, 'Дата по': 90, 'Площадь': 50, 'Цена за м2': 70
+            , 'Дата с': 80, 'Дата по': 90, 'Площадь': 50, 'Цена за 1м²': 70
             , 'Сумма без НДС': 85
             , 'Сумма с НДС': 85, 'Файл': 30, 'Имя файла': 0, 'Статус': 120
             , 'Описание': 12
