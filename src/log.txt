@@ -1,1 +1,15 @@
 01-11-2020 10:12:32 'CreateForm' object has no attribute 'sum_entry'
+09-11-2020 17:37:48 'CreateForm' object has no attribute 'mvz_current'
+09-11-2020 17:38:03 'CreateForm' object has no attribute 'mvz_current'
+12-11-2020 11:15:47 local variable 'bt2' referenced before assignment
+12-11-2020 12:30:02 'PreviewForm' object has no attribute '_get_payments_for_approval'
+12-11-2020 12:31:27 'CreateForm' object has no attribute 'mvz_current'
+12-11-2020 12:32:05 'CreateForm' object has no attribute 'mvz_current'
+12-11-2020 12:32:51 'CreateForm' object has no attribute 'type_business_box'
+12-11-2020 14:38:33 'CreateForm' object has no attribute 'type_business_box'
+12-11-2020 16:43:14 'PreviewForm' object has no attribute 'table'
+12-11-2020 18:05:34 button_back() missing 1 required positional argument: 'controller'
+12-11-2020 18:05:43 invalid command name ".!frame.!createform.row2_cf.!combobox"
+12-11-2020 18:06:02 invalid command name ".!frame.!createform.row2_cf.!combobox"
+13-11-2020 11:29:37 'PreviewForm' object has no attribute '_clear'
+13-11-2020 11:45:03 <class 'tkContracts.CreateForm'>
