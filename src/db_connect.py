@@ -90,7 +90,7 @@ class DBConnect(object):
                        num_add_contract, date_main_contract_start,
                        date_add_contract, text, filename,
                        date_main_contract_end,
-                       price_meter, type_business):
+                       price_meter, type_business,mvz_choice_list):
         """ Executes procedure that creates new request.
         """
         query = '''
@@ -112,14 +112,15 @@ class DBConnect(object):
                                     @Filename = ?,
                                     @DateMainEnd = ?,
                                     @PriceSquareMeter = ?,
-                                    @TypeBusiness = ?
+                                    @TypeBusiness = ?,
+                                    @ObjectIDLIst = ?
             '''
         print(userID, mvz, start_date, finish_date,
               sum_extra_total, sumtotal, nds, square,
               contragent, okpo, num_main_contract,
               num_add_contract, date_main_contract_start,
               date_add_contract, text, filename,
-              date_main_contract_end, price_meter, type_business)
+              date_main_contract_end, price_meter, type_business,mvz_choice_list)
         try:
             self.__cursor.execute(query, userID, mvz, start_date, finish_date,
                                   sum_extra_total, sumtotal, nds, square,
@@ -127,7 +128,7 @@ class DBConnect(object):
                                   num_add_contract, date_main_contract_start,
                                   date_add_contract, text, filename,
                                   date_main_contract_end, price_meter,
-                                  type_business)
+                                  type_business,mvz_choice_list)
             request_allowed = self.__cursor.fetchone()[0]
             self.__db.commit()
             return request_allowed

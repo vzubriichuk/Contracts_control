@@ -331,8 +331,6 @@ class PaymentApp(tk.Tk):
         self._center_window(*(self._geometry[frame_name]))
         # Make sure active_frame changes in case of network error
         try:
-            # if frame_name in ('CreateForm'):
-            #     frame._clear()
             if frame_name in ('PreviewForm'):
                 frame._resize_columns()
                 frame._refresh()
@@ -361,15 +359,14 @@ class PaymentFrame(tk.Frame):
         self.parent = parent
         self.controller = controller
         self.conn = connection
-        # {mvzSAP: [mvzname, [office1, office2, ...]], ...}
         self.mvz = {}
         if isinstance(self, PreviewForm):
             self.mvz['Все'] = (None, ('Все',))
-        for mvzSAP, mvzname, office in mvz:
+        for mvzSAP, mvzname, id in mvz:
             try:
-                self.mvz[mvzname][1].append(office)
+                self.mvz[mvzname][1].append(id)
             except KeyError:
-                self.mvz[mvzname] = [mvzSAP, [office]]
+                self.mvz[mvzname] = [mvzSAP, id]
         self.user_info = user_info
         # Often used info
         self.userID = user_info.UserID
@@ -415,11 +412,11 @@ class PaymentFrame(tk.Frame):
     def get_mvzSAP(self, mvz):
         return self.mvz[mvz][0]
 
-    def get_offices(self, mvz):
+    def get_mvzID(self, mvz):
         return self.mvz[mvz][1]
-
-    def _multiply_cost_square(self):
-        pass
+    #
+    # def _multiply_cost_square(self):
+    #     pass
 
 
 class CreateForm(PaymentFrame):
@@ -427,6 +424,7 @@ class CreateForm(PaymentFrame):
                  type_business, **kwargs):
         super().__init__(parent, controller, connection, user_info, mvz)
         self.upload_filename = str()
+        # print(self.mvz)
         # Top Frame with description and user name
         top = tk.Frame(self, name='top_cf', padx=5)
         self.main_label = tk.Label(top,
@@ -434,6 +432,7 @@ class CreateForm(PaymentFrame):
                                         'соглашения к основому договору',
                                    padx=10, font=('Arial', 8, 'bold'))
         self.type_businessID, self.type_business = zip(*type_business)
+        self.mvz_choice_list = str()
         self._add_user_label(top)
         self._top_pack()
 
@@ -442,13 +441,26 @@ class CreateForm(PaymentFrame):
 
         self.mvz_label = tk.Label(row1_cf, text='Объект', padx=7)
         self.mvz_current = tk.StringVar()
-        # self.mvz_current.set(self.mvznames[0]) # default value
         self.mvz_box = ttk.OptionMenu(row1_cf, self.mvz_current, '',
                                       *self.mvz.keys(),
                                       command=self._restraint_by_mvz)
         self.mvz_box.config(width=40)
-        self.mvz_sap_label = tk.Label(row1_cf, text='SAPmvz', padx=10)
-        self.mvz_sap = tk.Label(row1_cf, padx=10, bg='lightgray', width=11)
+        # self.mvz_sap_label = tk.Label(row1_cf, text='SAPmvz', padx=10)
+        # self.mvz_sap = tk.Label(row1_cf, padx=10, bg='lightgray', width=11)
+
+        self.menubutton = tk.Menubutton(row1_cf, text="Выбрать адреса договора",
+                                        indicatoron=True, borderwidth=1,
+                                        relief="raised")
+        self.menu = tk.Menu(self.menubutton, tearoff=False)
+        self.menubutton.configure(menu=self.menu)
+        self.choices = {}
+        for choice in (self.mvz.keys()):
+            self.choices[choice] = tk.IntVar(value=0)
+            self.menu.add_checkbutton(label=choice,
+                                      variable=self.choices[choice],
+                                      onvalue=1, offvalue=0,
+                                      command=self._mvz_choice_list)
+
         self.square = StringSumVar()
         self.square.set('0,00')
         self.square_label = tk.Label(row1_cf, text='Площадь, м2')
@@ -610,7 +622,8 @@ class CreateForm(PaymentFrame):
         bt_upload.pack(side=tk.RIGHT, padx=15, pady=0)
 
         # Text Frame
-        text_cf = ttk.LabelFrame(self, text=' Комментарий к договору ', name='text_cf')
+        text_cf = ttk.LabelFrame(self, text=' Комментарий к договору ',
+                                 name='text_cf')
 
         self.customFont = tkFont.Font(family="Arial", size=10)
         self.desc_text = tk.Text(text_cf,
@@ -649,21 +662,13 @@ class CreateForm(PaymentFrame):
         row6_cf.pack(side=tk.TOP, fill=tk.X, pady=5)
         text_cf.pack(side=tk.TOP, fill=tk.X, expand=True, padx=15, pady=15)
 
-    # def button_back(self, controller):
-        # controller._show_frame('PreviewForm')
-        # self._clear()
+    def _mvz_choice_list(self):
+        self.mvz_choice_list = []
+        for name, var in self.choices.items():
+            if var.get() == 1:
+                self.mvz_choice_list.append(self.get_mvzID(name))
 
-
-    # def _check_limit(self, *args, **kwargs):
-    #     """ Show remaining limit for month corresponding to month of plan_date.
-    #     """
-    #     plan_date = self.plan_date.get()
-    #     if not plan_date:
-    #         return
-    # limit = self.conn.get_limit_for_month_by_date(self.userID, self._convert_date(plan_date))
-    # self.limit_month.configure(text=self._convert_date(plan_date, output="%B %Y") + ': ')
-    # self.limit_sum.configure(text=self._format_float(limit) + ' грн.')
-    # self.limit_sum.configure(fg=('black' if limit else 'red'))
+        print(str(self.mvz_choice_list))
 
     def _file_opener(self):
         filename = fd.askopenfilename()
@@ -716,7 +721,6 @@ class CreateForm(PaymentFrame):
         self.date_main_contract_start.set_date(datetime.now())
         self.date_main_contract_end.set_date(datetime.now())
 
-
     def _fill_from_PreviewForm(self, mvz, num_main_contract_entry,
                                date_main_contract_start, date_main_contract_end
                                , contragent, type_business, okpo):
@@ -735,15 +739,12 @@ class CreateForm(PaymentFrame):
         self.date_main_contract_end.set_date(
             self._convert_str_date(date_main_contract_end))
         self.date_main_contract_end.configure(state="readonly")
-        self.mvz_sap.config(text=self.get_mvzSAP(self.mvz_current.get()) or '')
+        self.mvz_sap = self.get_mvzSAP(self.mvz_current.get())
         self.contragent_entry.delete(0, tk.END)
         self.contragent_entry.insert(0, contragent)
         self.contragent_entry.configure(state="readonly")
         self.okpo_entry.insert(0, okpo)
         self.square_cost.set('0,00')
-
-
-
 
     def _convert_date(self, date, output=None):
         """ Take date and convert it into output format.
@@ -774,7 +775,7 @@ class CreateForm(PaymentFrame):
         if not is_validated:
             return
 
-        request = {'mvz': self.mvz_sap.cget('text') or None,
+        request = {'mvz': self.mvz_sap, #self.mvz_sap.cget('text') or None,
                    # 'office': self.office_box.get(),
                    # 'categoryID': self.categories[self.category_box.get()],
                    'start_date': self._convert_date(
@@ -799,7 +800,8 @@ class CreateForm(PaymentFrame):
                    'date_main_contract_end': self._convert_date(
                        self.date_main_contract_end.get()),
                    'price_meter': price_meter,
-                   'type_business': self.type_business_box.get()
+                   'type_business': self.type_business_box.get(),
+                   'mvz_choice_list': self.mvz_choice_list
 
                    }
         created_success = self.conn.create_request(userID=self.userID,
@@ -839,7 +841,9 @@ class CreateForm(PaymentFrame):
             If 1 office is available, choose it, otherwise make box active.
         """
         # tcl language has no notion of None or a null value, so use '' instead
-        self.mvz_sap.config(text=self.get_mvzSAP(self.mvz_current.get()) or '')
+        # self.mvz_sap.config(text=self.get_mvzSAP(self.mvz_current.get()) or '')
+        self.mvz_sap = self.get_mvzSAP(self.mvz_current.get()) or ''
+        # print(self.mvz_sap)
         # offices = self.get_offices(self.mvz_current.get())
         # if len(offices) == 1:
         #     self.office_box.set(offices[0])
@@ -852,8 +856,9 @@ class CreateForm(PaymentFrame):
     def _row1_pack(self):
         self.mvz_label.pack(side=tk.LEFT)
         self.mvz_box.pack(side=tk.LEFT, padx=10)
-        self.mvz_sap_label.pack(side=tk.LEFT)
-        self.mvz_sap.pack(side=tk.LEFT)
+        # self.mvz_sap_label.pack(side=tk.LEFT)
+        # self.mvz_sap.pack(side=tk.LEFT)
+        self.menubutton.pack(side=tk.LEFT, padx=10)
         self.square_entry.pack(side=tk.RIGHT, padx=10)
         self.square_label.pack(side=tk.RIGHT, padx=10)
 
@@ -1015,10 +1020,6 @@ class PreviewForm(PaymentFrame):
 
         self._add_copyright(top)
         self._add_user_label(top)
-
-
-
-
 
         top.pack(side=tk.TOP, fill=tk.X, expand=False)
 
@@ -1755,7 +1756,7 @@ class AboutFrame(tk.Frame):
 
         self.copyright_text.insert(tk.INSERT,
                                    'Copyright © 2020 Департамент аналитики\n'
-                                    'Офис контроллинга логистики\n')
+                                   'Офис контроллинга логистики\n')
         self.copyright_text.insert(tk.INSERT, 'MIT License',
                                    hyperlink.add(link_license))
 
@@ -1769,6 +1770,7 @@ class AboutFrame(tk.Frame):
         self.logo_label.pack(side=tk.LEFT, padx=10)
         self.copyright_text.pack(side=tk.LEFT, padx=10)
         self.pack(fill=tk.BOTH, expand=True)
+
 
 #
 # class AlterLimits(tk.Frame):

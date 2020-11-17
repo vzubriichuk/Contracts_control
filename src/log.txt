@@ -13,3 +13,11 @@
 12-11-2020 18:06:02 invalid command name ".!frame.!createform.row2_cf.!combobox"
 13-11-2020 11:29:37 'PreviewForm' object has no attribute '_clear'
 13-11-2020 11:45:03 <class 'tkContracts.CreateForm'>
+17-11-2020 09:55:33 'CreateForm' object has no attribute 'type_business_box'
+17-11-2020 09:56:39 'CreateForm' object has no attribute 'printValues'
+17-11-2020 10:40:14 unhashable type: 'list'
+17-11-2020 10:40:32 unhashable type: 'list'
+17-11-2020 11:10:26 not enough values to unpack (expected 3, got 2)
+17-11-2020 13:38:56 0
+17-11-2020 13:39:11 unhashable type: 'list'
+17-11-2020 13:43:53 tuple index out of range
