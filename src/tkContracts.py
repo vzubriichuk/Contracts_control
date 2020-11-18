@@ -669,8 +669,6 @@ class CreateForm(PaymentFrame):
                 # self.mvz_choice_list += str(",".join(self.get_mvzID(name)))
                 self.mvz_choice_list.append(self.get_mvzID(name))
 
-        print(str(self.mvz_choice_list))
-
     def _file_opener(self):
         filename = fd.askopenfilename()
         if filename:
@@ -1618,17 +1616,17 @@ class DetailedPreview(tk.Frame):
                     self.filename_preview = row[1][1]
                 self._newRow(self.table_frame, fonts, *row)
 
-        # self.appr_label = tk.Label(self.top, text='Утверждающие',
-        #                            padx=10, pady=5, font=('Arial', 10, 'bold'))
-        #
-        # # Top Frame with description and user name
-        # self.appr_cf = tk.Frame(self, name='appr_cf', padx=5)
-        #
-        # # Add approvals to appr_cf
-        # fonts = (('Arial', 10), ('Arial', 10))
-        # approvals = self.conn.get_approvals(self.paymentID)
-        # for rowNumber, row in enumerate(approvals):
-        #     self._newRow(self.appr_cf, fonts, rowNumber+1, row)
+        self.appr_label = tk.Label(self.top, text='Все МВЗ по договору',
+                                   padx=10, pady=5, font=('Arial', 10, 'bold'))
+
+        # Top Frame with list mvz
+        self.appr_cf = tk.Frame(self, name='appr_cf', padx=5)
+
+        # Add list of all mvz for current contract
+        fonts = (('Arial', 10), ('Arial', 10))
+        approvals = self.conn.get_additional_objects(self.contractID)
+        for rowNumber, row in enumerate(approvals):
+            self._newRow(self.appr_cf, fonts, rowNumber+1, row)
 
         self._add_buttons()
         self._pack_frames()
@@ -1644,16 +1642,16 @@ class DetailedPreview(tk.Frame):
             bt1 = ttk.Button(self.bottom, text="Просмотреть файл", width=20,
                              command=self._open_file,
                              style='ButtonGreen.TButton')
-            bt1.pack(side=tk.LEFT, padx=15, pady=5)
+            bt1.pack(side=tk.LEFT, padx=15, pady=10)
 
         bt2 = ttk.Button(self.bottom, text="Закрыть", width=10,
                          command=self.parent.destroy)
-        bt2.pack(side=tk.RIGHT, padx=15, pady=5)
+        bt2.pack(side=tk.RIGHT, padx=15, pady=10)
 
         # if self.userID == self.initiatorID and 'Отозв.' not in self.rowtags:
         bt3 = ttk.Button(self.bottom, text="Удалить договор", width=18,
                          command=self._delete)
-        bt3.pack(side=tk.RIGHT, padx=15, pady=5)
+        bt3.pack(side=tk.RIGHT, padx=15, pady=10)
 
     def _delete(self):
         mboxname = 'Удаление договора'
@@ -1702,9 +1700,9 @@ class DetailedPreview(tk.Frame):
     def _pack_frames(self):
         self.top.pack(side=tk.TOP, fill=tk.X, expand=False)
         self.bottom.pack(side=tk.BOTTOM, fill=tk.X, expand=False)
-        # self.appr_cf.pack(side=tk.TOP, fill=tk.X)
+        self.appr_cf.pack(side=tk.TOP, fill=tk.X)
         self.table_frame.pack()
-        # self.appr_label.pack(side=tk.LEFT, expand=False)
+        self.appr_label.pack(side=tk.LEFT, expand=False)
         self.pack()
 
 

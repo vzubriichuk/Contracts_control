@@ -147,41 +147,17 @@ class DBConnect(object):
         self.__cursor.execute(query, UserLogin)
         return self.__cursor.fetchone()
 
-    # @monitor_network_state
-    # def get_allowed_initiators(self, UserID, AccessType, isSuperUser):
-    #     """ Determines list of persons that should be shown in filters.
-    #     """
-    #     query = '''
-    #     exec payment.get_allowed_initiators @UserID = ?,
-    #                                         @AccessType = ?,
-    #                                         @isSuperUser = ?
-    #     '''
-    #     self.__cursor.execute(query, UserID, AccessType, isSuperUser)
-    #     return [(None, 'Все'), ] + self.__cursor.fetchall()
-    #
-    # @monitor_network_state
-    # def get_approvals(self, paymentID):
-    #     """ Returns all approvals of the request with id = paymentID.
-    #     """
-    #     query = "exec payment.get_approvals @paymentID = ?"
-    #     self.__cursor.execute(query, paymentID)
-    #     return self.__cursor.fetchall()
-    #
-    # @monitor_network_state
-    # def get_approvals_for_first_stage(self):
-    #     """ Returns all approvals for first stage who can be chosen.
-    #     """
-    #     query = "exec payment.get_approvals_for_first_stage"
-    #     self.__cursor.execute(query)
-    #     return self.__cursor.fetchall()
-
     @monitor_network_state
-    def get_info_to_alter_payment(self, paymentID):
-        """ Returns info about request is intended to be altered.
+    def get_additional_objects(self, ContractID):
+        """ Returns information about additionals MVZ for object's contract.
         """
-        query = "exec payment.get_info_to_alter_payment @PaymentID = ?"
-        self.__cursor.execute(query, paymentID)
+        query = '''
+             exec contracts.get_additional_objects @ContractID = ?
+             '''
+
+        self.__cursor.execute(query, ContractID)
         return self.__cursor.fetchall()
+
 
     @monitor_network_state
     def get_objects(self):
