@@ -432,7 +432,7 @@ class CreateForm(PaymentFrame):
                                         'соглашения к основому договору',
                                    padx=10, font=('Arial', 8, 'bold'))
         self.type_businessID, self.type_business = zip(*type_business)
-        self.mvz_choice_list = str()
+        self.mvz_choice_list = []
         self._add_user_label(top)
         self._top_pack()
 
@@ -666,6 +666,7 @@ class CreateForm(PaymentFrame):
         self.mvz_choice_list = []
         for name, var in self.choices.items():
             if var.get() == 1:
+                # self.mvz_choice_list += str(",".join(self.get_mvzID(name)))
                 self.mvz_choice_list.append(self.get_mvzID(name))
 
         print(str(self.mvz_choice_list))
@@ -720,6 +721,7 @@ class CreateForm(PaymentFrame):
         self.date_add_contract.set_date(datetime.now())
         self.date_main_contract_start.set_date(datetime.now())
         self.date_main_contract_end.set_date(datetime.now())
+
 
     def _fill_from_PreviewForm(self, mvz, num_main_contract_entry,
                                date_main_contract_start, date_main_contract_end
@@ -801,7 +803,7 @@ class CreateForm(PaymentFrame):
                        self.date_main_contract_end.get()),
                    'price_meter': price_meter,
                    'type_business': self.type_business_box.get(),
-                   'mvz_choice_list': self.mvz_choice_list
+                   'mvz_choice_list': ','.join(map(str, self.mvz_choice_list))
 
                    }
         created_success = self.conn.create_request(userID=self.userID,
