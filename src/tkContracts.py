@@ -432,7 +432,7 @@ class CreateForm(PaymentFrame):
                                         'соглашения к основому договору',
                                    padx=10, font=('Arial', 8, 'bold'))
         self.type_businessID, self.type_business = zip(*type_business)
-        self.mvz_choice_list = []
+        # self.mvz_choice_list = []
         self._add_user_label(top)
         self._top_pack()
 
@@ -451,15 +451,25 @@ class CreateForm(PaymentFrame):
         self.menubutton = tk.Menubutton(row1_cf, text="Выбрать адреса договора",
                                         indicatoron=True, borderwidth=1,
                                         relief="raised")
-        self.menu = tk.Menu(self.menubutton, tearoff=False)
-        self.menubutton.configure(menu=self.menu)
+        self.menu_choice_mvz = tk.Menu(self.menubutton, tearoff=False)
+        self.menubutton.configure(menu=self.menu_choice_mvz)
+        # self.choices = {}
+        # for choice in self.mvz.keys():
+        #     self.choices[choice] = tk.IntVar(value=0)
+        #     self.menu_choice_mvz.add_checkbutton(label=choice,
+        #                                          variable=self.choices[choice],
+        #                                          onvalue=1, offvalue=0,
+        #                                          command=self._mvz_choice_list)
+
         self.choices = {}
-        for choice in (self.mvz.keys()):
+        for choice in self.mvz.keys():
             self.choices[choice] = tk.IntVar(value=0)
-            self.menu.add_checkbutton(label=choice,
-                                      variable=self.choices[choice],
-                                      onvalue=1, offvalue=0,
-                                      command=self._mvz_choice_list)
+            self.menu_choice_mvz.add_checkbutton(label=choice,
+                                                 variable=self.choices[choice],
+                                                 onvalue=1, offvalue=0,
+                                                 command=self._mvz_choice_list)
+            # self.menu_choice_mvz.add_separator()
+
 
         self.square = StringSumVar()
         self.square.set('0,00')
@@ -509,10 +519,6 @@ class CreateForm(PaymentFrame):
         # Third Fill Frame
         row3_cf = tk.Frame(self, name='row3_cf', padx=15)
 
-        # self.category_label = tk.Label(row2_cf, text='Категория', padx=7)
-        # self.category_box = ttk.Combobox(row2_cf, width=23, state='readonly')
-        # self.category_box['values'] = list(self.categories)
-
         self.num_main_contract = tk.Label(row3_cf, text='№ договора', padx=0)
         self.num_main_contract_entry = tk.Entry(row3_cf, width=23)
         self.date_main_label_end = tk.Label(row3_cf, text='Договор по:', padx=7)
@@ -554,13 +560,6 @@ class CreateForm(PaymentFrame):
                                            locale='ru_RU')
         self.sum_label = tk.Label(row4_cf, text='Сумма всего без НДС, грн',
                                   padx=3)
-        # self.sumtotal = StringSumVar()
-        # self.sumtotal.set('0.00')
-        # vcmd = (self.register(self._validate_sum))
-        # self.sum_entry = tk.Entry(row4_cf, name='sum_entry', width=18,
-        #                           textvariable=self.sumtotal, validate='all',
-        #                           validatecommand=(vcmd, '%P')
-        #                           )
         self.sumtotal = tk.StringVar(row4_cf, value='0.00')
         vcmd = (self.register(self._validate_sum))
         # self.sum_entry = tk.Entry(row4_cf, textvariable=self.sumtotal, width=18)
@@ -637,7 +636,7 @@ class CreateForm(PaymentFrame):
         bottom_cf = tk.Frame(self, name='bottom_cf')
 
         bt3 = ttk.Button(bottom_cf, text="Назад", width=10,
-                         # command=self._multiply_cost_square)
+                         # command=self._deselect_checked_mvz)
                          # command=self.button_back(controller))
                          command=lambda: controller._show_frame('PreviewForm'))
         bt3.pack(side=tk.RIGHT, padx=15, pady=10)
@@ -662,12 +661,27 @@ class CreateForm(PaymentFrame):
         row6_cf.pack(side=tk.TOP, fill=tk.X, pady=5)
         text_cf.pack(side=tk.TOP, fill=tk.X, expand=True, padx=15, pady=15)
 
+
     def _mvz_choice_list(self):
         self.mvz_choice_list = []
         for name, var in self.choices.items():
             if var.get() == 1:
                 # self.mvz_choice_list += str(",".join(self.get_mvzID(name)))
                 self.mvz_choice_list.append(self.get_mvzID(name))
+
+        print(self.mvz_choice_list)
+
+    # Deselect checked row in menu (destroy and create menubutton again)
+    def _deselect_checked_mvz(self):
+        self.menu_choice_mvz.destroy()
+        self.menu_choice_mvz = tk.Menu(self.menubutton, tearoff=False)
+        self.menubutton.configure(menu=self.menu_choice_mvz)
+        for choice in self.mvz.keys():
+            self.choices[choice] = tk.IntVar(value=0)
+            self.menu_choice_mvz.add_checkbutton(label=choice,
+                                                 variable=self.choices[choice],
+                                                 onvalue=1, offvalue=0,
+                                                 command=self._mvz_choice_list)
 
     def _file_opener(self):
         filename = fd.askopenfilename()
@@ -693,10 +707,6 @@ class CreateForm(PaymentFrame):
             # self.sum_entry.bind("<FocusOut>", self._on_focus_out_format_sum)
 
     def _clear(self):
-        # self.mvz_current.set('')
-        # self.mvz_sap.config(text='')
-        # self.office_box.set('')
-        # self.office_box.configure(state="disabled")
         self.type_business_box.configure(state="readonly")
         self.num_main_contract_entry.configure(state="normal")
         self.date_main_contract_start.configure(state="normal")
@@ -719,7 +729,7 @@ class CreateForm(PaymentFrame):
         self.date_add_contract.set_date(datetime.now())
         self.date_main_contract_start.set_date(datetime.now())
         self.date_main_contract_end.set_date(datetime.now())
-
+        self._deselect_checked_mvz()
 
     def _fill_from_PreviewForm(self, mvz, num_main_contract_entry,
                                date_main_contract_start, date_main_contract_end
@@ -775,7 +785,7 @@ class CreateForm(PaymentFrame):
         if not is_validated:
             return
 
-        request = {'mvz': self.mvz_sap, #self.mvz_sap.cget('text') or None,
+        request = {'mvz': self.mvz_sap,  # self.mvz_sap.cget('text') or None,
                    # 'office': self.office_box.get(),
                    # 'categoryID': self.categories[self.category_box.get()],
                    'start_date': self._convert_date(
@@ -1626,7 +1636,7 @@ class DetailedPreview(tk.Frame):
         fonts = (('Arial', 10), ('Arial', 10))
         approvals = self.conn.get_additional_objects(self.contractID)
         for rowNumber, row in enumerate(approvals):
-            self._newRow(self.appr_cf, fonts, rowNumber+1, row)
+            self._newRow(self.appr_cf, fonts, rowNumber + 1, row)
 
         self._add_buttons()
         self._pack_frames()
