@@ -432,7 +432,7 @@ class CreateForm(PaymentFrame):
                                         'соглашения к основому договору',
                                    padx=10, font=('Arial', 8, 'bold'))
         self.type_businessID, self.type_business = zip(*type_business)
-        # self.mvz_choice_list = []
+        self.mvz_choice_list = []
         self._add_user_label(top)
         self._top_pack()
 
@@ -669,10 +669,11 @@ class CreateForm(PaymentFrame):
                 # self.mvz_choice_list += str(",".join(self.get_mvzID(name)))
                 self.mvz_choice_list.append(self.get_mvzID(name))
 
-        print(self.mvz_choice_list)
+        # print(self.mvz_choice_list)
 
     # Deselect checked row in menu (destroy and create menubutton again)
     def _deselect_checked_mvz(self):
+        self.mvz_choice_list.clear()
         self.menu_choice_mvz.destroy()
         self.menu_choice_mvz = tk.Menu(self.menubutton, tearoff=False)
         self.menubutton.configure(menu=self.menu_choice_mvz)
@@ -682,6 +683,7 @@ class CreateForm(PaymentFrame):
                                                  variable=self.choices[choice],
                                                  onvalue=1, offvalue=0,
                                                  command=self._mvz_choice_list)
+            # print(self.mvz_choice_list)
 
     def _file_opener(self):
         filename = fd.askopenfilename()
@@ -926,6 +928,12 @@ class CreateForm(PaymentFrame):
         if not self.mvz_current.get():
             messagebox.showerror(
                 messagetitle, 'Не выбран объект'
+            )
+            return False
+
+        if not self.mvz_choice_list:
+            messagebox.showerror(
+                messagetitle, 'Не выбраны адреса к договору'
             )
             return False
         if not self.type_business_box.get():
