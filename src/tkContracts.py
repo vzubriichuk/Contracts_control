@@ -473,7 +473,7 @@ class CreateForm(PaymentFrame):
 
         self.square = StringSumVar()
         self.square.set('0,00')
-        self.square_label = tk.Label(row1_cf, text='Площадь, м2')
+        self.square_label = tk.Label(row1_cf, text='Площадь, м²')
         vcmd = (self.register(self._validate_sum))
         self.square_entry = tk.Entry(row1_cf, name='square_entry', width=18,
                                      textvariable=self.square, validate='all',
@@ -684,7 +684,6 @@ class CreateForm(PaymentFrame):
                                                  onvalue=1, offvalue=0,
                                                  command=self._mvz_choice_list)
             # print(self.mvz_choice_list)
-
     def _file_opener(self):
         filename = fd.askopenfilename()
         if filename:
@@ -824,14 +823,6 @@ class CreateForm(PaymentFrame):
             )
             self._clear()
             self.controller._show_frame('PreviewForm')
-        # elif created_success == 0:
-        #     dat = self._convert_date(self.plan_date_entry.get(), output="%B %Y")
-        #     messagebox.showerror(
-        #         messagetitle,
-        #         'Превышен лимит суммы на {}.\n'
-        #         'Для повышения лимита обратитесь в отдел контроллинга'
-        #             .format(dat)
-        #     )
         else:
             # self._remove_upload_file()
             messagebox.showerror(
@@ -1199,13 +1190,13 @@ class PreviewForm(PaymentFrame):
                          command=self._export_to_excel)
         bt4.pack(side=tk.RIGHT, padx=10, pady=10)
 
-        if self.userID in (6, 24, 42, 76, 20):
-            bt4a = ttk.Button(bottom_cf, text="Изменить лимиты", width=20,
-                              command=self._alter_limits)
-            bt4a.pack(side=tk.RIGHT, padx=10, pady=10)
-            bt4b = ttk.Button(bottom_cf, text="Открыть отчёт", width=20,
-                              command=self._open_report)
-            bt4b.pack(side=tk.RIGHT, padx=10, pady=10)
+        # if self.userID in (6, 24, 42, 76, 20):
+        #     bt4a = ttk.Button(bottom_cf, text="Изменить лимиты", width=20,
+        #                       command=self._alter_limits)
+        #     bt4a.pack(side=tk.RIGHT, padx=10, pady=10)
+        #     bt4b = ttk.Button(bottom_cf, text="Открыть отчёт", width=20,
+        #                       command=self._open_report)
+        #     bt4b.pack(side=tk.RIGHT, padx=10, pady=10)
 
         # Pack frames
         bottom_cf.pack(side=tk.BOTTOM, fill=tk.X, expand=False)
@@ -1634,7 +1625,7 @@ class DetailedPreview(tk.Frame):
                     self.filename_preview = row[1][1]
                 self._newRow(self.table_frame, fonts, *row)
 
-        self.appr_label = tk.Label(self.top, text='Все МВЗ по договору',
+        self.appr_label = tk.Label(self.top, text='Адреса по договору',
                                    padx=10, pady=5, font=('Arial', 10, 'bold'))
 
         # Top Frame with list mvz

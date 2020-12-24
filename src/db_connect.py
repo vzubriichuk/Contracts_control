@@ -63,25 +63,6 @@ class DBConnect(object):
         else:
             return None
 
-    # @monitor_network_state
-    # def alter_payment(self, userID, paymentID, date_planed, SumNoTax):
-    #     """ Alter payment and log changes on server.
-    #     """
-    #     query = '''
-    #     exec payment.alter_payment @UserID = ?,
-    #                                @PaymentID = ?,
-    #                                @date_planed = ?,
-    #                                @SumNoTax = ?
-    #     '''
-    #
-    #     try:
-    #         self.__cursor.execute(query, userID, paymentID, date_planed,
-    #                               SumNoTax)
-    #         self.__db.commit()
-    #         return 1
-    #     except pyodbc.ProgrammingError:
-    #         return 0
-
     @monitor_network_state
     def create_request(self, userID, mvz, start_date, finish_date,
                        sum_extra_total,

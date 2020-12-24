@@ -80,7 +80,7 @@ def main():
     try:
         with conn as sql:
             UserLogin = getpass.getuser()
-            # UserLogin = 'r.sidorov'
+            # UserLogin = 'vi.leonenko'
             access_permitted = sql.access_check(UserLogin)
             if not access_permitted:
                 tkp.AccessError()
