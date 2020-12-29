@@ -381,6 +381,9 @@ class PaymentFrame(tk.Frame):
     def _format_float(self, sum_float):
         return '{:,.2f}'.format(sum_float).replace(',', ' ').replace('.', ',')
 
+    def _format_float_decimal(self, sum_float):
+        return '{:,.6f}'.format(sum_float).replace(',', ' ').replace('.', ',')
+
     def _on_focus_in_format_sum(self, event):
         """ Convert str into float in binded to entry variable when focus in.
         """
@@ -397,6 +400,16 @@ class PaymentFrame(tk.Frame):
         sum_entry = float(event.widget.get().replace(',', '.'))
         varname = str(event.widget.cget("textvariable"))
         event.widget.setvar(varname, self._format_float(sum_entry))
+        self._multiply_cost_square()
+
+    def _on_focus_out_format_sum_decimal(self, event):
+        """ Convert float into str in binded to entry variable when focus out.
+        """
+        if not event.widget.get().replace(',', '.'):
+            return
+        sum_entry = float(event.widget.get().replace(',', '.'))
+        varname = str(event.widget.cget("textvariable"))
+        event.widget.setvar(varname, self._format_float_decimal(sum_entry))
         self._multiply_cost_square()
 
     def _validate_sum(self, sum_entry):
@@ -512,7 +525,7 @@ class CreateForm(PaymentFrame):
                                           validatecommand=(vcmd, '%P')
                                           )
         self.square_cost_entry.bind("<FocusIn>", self._on_focus_in_format_sum)
-        self.square_cost_entry.bind("<FocusOut>", self._on_focus_out_format_sum)
+        self.square_cost_entry.bind("<FocusOut>", self._on_focus_out_format_sum_decimal)
 
         self._row2_pack()
 
