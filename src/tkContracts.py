@@ -525,6 +525,7 @@ class CreateForm(PaymentFrame):
                                           validatecommand=(vcmd, '%P')
                                           )
         self.square_cost_entry.bind("<FocusIn>", self._on_focus_in_format_sum)
+        # Change format price to max decimal format
         self.square_cost_entry.bind("<FocusOut>", self._on_focus_out_format_sum_decimal)
 
         self._row2_pack()
