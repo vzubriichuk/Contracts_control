@@ -75,51 +75,6 @@ class MonthFilterError(PaymentsError):
         super().__init__(self.expression, self.message)
 
 
-#
-# class NoRightsToFillCreateFormError(PaymentsError):
-#     """ Exception raised when trying to fill CreateForm using data with
-#     no rights to be used for creation.
-#
-#     Attributes:
-#         expression - input expression in which the error occurred;
-#         message - explanation of the error.
-#     """
-#
-#     def __init__(self, expression,
-#                  message='Нет прав для использования данного МВЗ/офиса'):
-#         self.expression = expression
-#         self.message = message
-#         super().__init__(self.expression, self.message)
-#
-#
-# class PeriodExceededError(PaymentsError):
-#     """ Exception raised if period is exceeded when altering payment.
-#
-#     Attributes:
-#         expression - input expression in which the error occurred;
-#         message - explanation of the error.
-#     """
-#
-#     def __init__(self, expression, message='Превышен допустимый период'):
-#         self.expression = expression
-#         self.message = message
-#         super().__init__(self.expression, self.message)
-#
-#
-# class SumExceededError(PaymentsError):
-#     """ Exception raised if sum is exceeded when altering payment.
-#
-#     Attributes:
-#         expression - input expression in which the error occurred;
-#         message - explanation of the error.
-#     """
-#
-#     def __init__(self, expression, message='Превышена первичная сумма'):
-#         self.expression = expression
-#         self.message = message
-#         super().__init__(self.expression, self.message)
-
-
 class AccessError(tk.Tk):
     """ Raise an error when user doesn't have permission to work with app.
     """
@@ -466,13 +421,6 @@ class CreateForm(PaymentFrame):
                                         relief="raised")
         self.menu_choice_mvz = tk.Menu(self.menubutton, tearoff=False)
         self.menubutton.configure(menu=self.menu_choice_mvz)
-        # self.choices = {}
-        # for choice in self.mvz.keys():
-        #     self.choices[choice] = tk.IntVar(value=0)
-        #     self.menu_choice_mvz.add_checkbutton(label=choice,
-        #                                          variable=self.choices[choice],
-        #                                          onvalue=1, offvalue=0,
-        #                                          command=self._mvz_choice_list)
 
         self.choices = {}
         for choice in self.mvz.keys():
@@ -481,7 +429,6 @@ class CreateForm(PaymentFrame):
                                                  variable=self.choices[choice],
                                                  onvalue=1, offvalue=0,
                                                  command=self._mvz_choice_list)
-            # self.menu_choice_mvz.add_separator()
 
 
         self.square = StringSumVar()
@@ -607,12 +554,9 @@ class CreateForm(PaymentFrame):
         self.nds.set(20)
         self.nds20 = ttk.Radiobutton(row5_cf, text="20 %", variable=self.nds,
                                      value=20)
-        # self.nds7 = ttk.Radiobutton(row3_cf, text="7 %", variable=self.nds,
-        #                             value=7)
         self.nds0 = ttk.Radiobutton(row5_cf, text="0 %", variable=self.nds,
                                     value=0)
 
-        # sc = tk.Entry(row4_cf, width=15)
 
         self._row5_pack()
 
@@ -680,10 +624,7 @@ class CreateForm(PaymentFrame):
         self.mvz_choice_list = []
         for name, var in self.choices.items():
             if var.get() == 1:
-                # self.mvz_choice_list += str(",".join(self.get_mvzID(name)))
                 self.mvz_choice_list.append(self.get_mvzID(name))
-
-        # print(self.mvz_choice_list)
 
     # Deselect checked row in menu (destroy and create menubutton again)
     def _deselect_checked_mvz(self):
@@ -719,7 +660,6 @@ class CreateForm(PaymentFrame):
         if total_square_cost:
             self.sum_entry.delete(0, tk.END)
             self.sum_entry.insert(0, total_square_cost)
-            # self.sum_entry.bind("<FocusOut>", self._on_focus_out_format_sum)
 
     def _clear(self):
         self.type_business_box.configure(state="readonly")
@@ -858,17 +798,7 @@ class CreateForm(PaymentFrame):
             If 1 office is available, choose it, otherwise make box active.
         """
         # tcl language has no notion of None or a null value, so use '' instead
-        # self.mvz_sap.config(text=self.get_mvzSAP(self.mvz_current.get()) or '')
         self.mvz_sap = self.get_mvzSAP(self.mvz_current.get()) or ''
-        # print(self.mvz_sap)
-        # offices = self.get_offices(self.mvz_current.get())
-        # if len(offices) == 1:
-        #     self.office_box.set(offices[0])
-        #     self.office_box.configure(state="disabled")
-        # else:
-        #     self.office_box.set('')
-        #     self.office_box['values'] = offices
-        #     self.office_box.configure(state="readonly")
 
     def _row1_pack(self):
         self.mvz_label.pack(side=tk.LEFT)
@@ -888,8 +818,6 @@ class CreateForm(PaymentFrame):
         self.square_cost_label.pack(side=tk.RIGHT, padx=10)
 
     def _row3_pack(self):
-        # self.category_label.pack(side=tk.LEFT)
-        # self.category_box.pack(side=tk.LEFT, padx=30)
         self.num_main_contract.pack(side=tk.LEFT, padx=7)
         self.num_main_contract_entry.pack(side=tk.LEFT, padx=19)
         self.date_main_label_end.pack(side=tk.LEFT)
@@ -911,7 +839,6 @@ class CreateForm(PaymentFrame):
         self.date_start_label.pack(side=tk.LEFT)
         self.date_start_entry.pack(side=tk.LEFT, padx=6)
         self.nds0.pack(side=tk.RIGHT, padx=7)
-        # self.nds7.pack(side=tk.RIGHT, padx=7)
         self.nds20.pack(side=tk.RIGHT, padx=8)
         self.nds_label.pack(side=tk.RIGHT)
 
@@ -924,9 +851,6 @@ class CreateForm(PaymentFrame):
 
     def _top_pack(self):
         self.main_label.pack(side=tk.TOP, expand=False, anchor=tk.NW)
-        # self.limit_label.pack(side=tk.LEFT, expand=False, anchor=tk.W)
-        # self.limit_month.pack(side=tk.LEFT, expand=False, anchor=tk.W)
-        # self.limit_sum.pack(side=tk.LEFT, expand=False, anchor=tk.W)
 
     def _validate_request_creation(self, messagetitle, sumtotal):
         """ Check if all fields are filled properly. """
@@ -971,42 +895,7 @@ class CreateForm(PaymentFrame):
                 messagetitle, 'Не указана стоимость за 1 кв.м.'
             )
             return False
-        # date_validation = self._validate_plan_date()
-        # if date_validation == 'incorrect_date':
-        #     messagebox.showerror(
-        #         messagetitle,
-        #         'Плановая дата не может быть прошедшей'
-        #     )
-        #     return False
-        # elif date_validation == 'ask_confirmation':
-        #     confirmed = messagebox.askyesno(title='Подтвердите действие',
-        #                                     message='Создать заявку на сегодняшную дату?')
-        #     if not confirmed:
-        #         return False
-        # elif date_validation != 'correct_date':
-        #     messagebox.showerror(title='Ошибка',
-        #                          message=(
-        #                              'Возникло непредвиденное исключение\n{}'
-        #                              .format(date_validation))
-        #                          )
-        #     return False
         return True
-
-    # def _validate_plan_date(self):
-    #     """ Validate date correctness according to rules. """
-    #     try:
-    #         plan_date = self.plan_date_entry.get()
-    #         try:
-    #             plan_date = datetime.strptime(plan_date, '%d.%m.%Y').date()
-    #         except ValueError:
-    #             plan_date = datetime.strptime(plan_date, '%d.%m.%y').date()
-    #         today = date.today()
-    #         return ('correct_date' if plan_date > today else
-    #                 'ask_confirmation' if plan_date == today else
-    #                 'incorrect_date'
-    #                 )
-    #     except Exception as e:
-    #         return e
 
 
 class PreviewForm(PaymentFrame):
@@ -1014,10 +903,6 @@ class PreviewForm(PaymentFrame):
                  mvz, type_business, status_list, **kwargs):
         super().__init__(parent, controller, connection, user_info, mvz)
 
-        # self.office = tuple(sorted(set(x for lst in map(lambda v: v[1],
-        #                                                 self.mvz.values()) for x
-        #                                in lst),
-        #                            key=lambda s: '' if s == 'Все' else s))
         self.statusID, self.status_list = zip(*[(None, 'Все'), ] + status_list)
         self.type_businessID, self.type_business = zip(
             *[(None, 'Все'), ] + type_business)
@@ -1051,9 +936,6 @@ class PreviewForm(PaymentFrame):
 
         # First Filter Frame with (MVZ, office)
         row1_cf = tk.Frame(filterframe, name='row1_cf', padx=15, pady=5)
-
-        # self.initiator_label = tk.Label(row1_cf, text='Кем создано', padx=10)
-        # self.initiator_box = ttk.Combobox(row1_cf, width=35, state='readonly')
 
         self.mvz_label = tk.Label(row1_cf, text='Объект', padx=10)
         self.mvz_box = ttk.Combobox(row1_cf, width=45, state='readonly')
@@ -1092,26 +974,6 @@ class PreviewForm(PaymentFrame):
         self.date_entry_y = tk.Spinbox(row2_cf, width=7, from_=2019, to=2059,
                                        font=('Arial', 9),
                                        textvariable=self.year)
-        # self.sum_label_from = tk.Label(row2_cf, text='Сумма без НДС: от')
-        # self.sumtotal_from = StringSumVar()
-        # vcmd = (self.register(self._validate_sum))
-        # self.sum_entry_from = tk.Entry(row2_cf, width=12, textvariable=self.sumtotal_from,
-        #                 validate='all', validatecommand=(vcmd, '%P')
-        #                 )
-        # self.sum_entry_from.bind("<FocusIn>", self._on_focus_in_format_sum)
-        # self.sum_entry_from.bind("<FocusOut>", self._on_focus_out_format_sum)
-        # self.sum_label_to = tk.Label(row2_cf, text='до')
-        # self.sumtotal_to = StringSumVar()
-        # self.sum_entry_to = tk.Entry(row2_cf, width=12, textvariable=self.sumtotal_to,
-        #                 validate='all', validatecommand=(vcmd, '%P'))
-        # self.sum_entry_to.bind("<FocusIn>", self._on_focus_in_format_sum)
-        # self.sum_entry_to.bind("<FocusOut>", self._on_focus_out_format_sum)
-        # self.nds_label = tk.Label(row2_cf, text='НДС', padx=20)
-        # self.nds = tk.IntVar()
-        # self.ndsall = ttk.Radiobutton(row2_cf, text="Любой", variable=self.nds, value=-1)
-        # self.nds20 = ttk.Radiobutton(row2_cf, text="20 %", variable=self.nds, value=20)
-        # self.nds7 = ttk.Radiobutton(row2_cf, text="7 %", variable=self.nds, value=7)
-        # self.nds0 = ttk.Radiobutton(row2_cf, text="0 %", variable=self.nds, value=0)
 
         # Pack row2_cf
         self._row2_pack()
@@ -1121,10 +983,6 @@ class PreviewForm(PaymentFrame):
         # Third Fill Frame (checkbox + button to apply filter)
         row3_cf = tk.Frame(filterframe, name='row3_cf', padx=15)
 
-        # self.search_by_num = tk.StringVar()
-        # self.search_by_num_label = tk.Label(row3_cf, text='Поиск по номеру заявки')
-        # self.search_by_num_entry = tk.Entry(row3_cf, width=20,
-        #                                     textvariable=self.search_by_num)
 
         # Pack row3_cf
         self._row3_pack()
@@ -1151,12 +1009,6 @@ class PreviewForm(PaymentFrame):
             , 'Описание': 12
                          }
 
-        # if self.EXTENDED_MODE:
-        #     self.table = CheckboxTreeview(preview_cf,
-        #                                   selectmode='browse',
-        #                                   style='HeaderStyle.Treeview'
-        #                                   )
-        # else:
         self.table = ttk.Treeview(preview_cf, show='headings',
                                   selectmode='browse',
                                   style='HeaderStyle.Treeview'
@@ -1187,10 +1039,6 @@ class PreviewForm(PaymentFrame):
                              command=self._create_from_current)
             bt2.pack(side=tk.LEFT, padx=10, pady=10)
 
-        # if self.user_info.AccessType in (1, 2):
-        #     bt3 = ttk.Button(bottom_cf, text="Изменить договор", width=20,
-        #                      command=self._alter_request)
-        #     bt3.pack(side=tk.LEFT, padx=10, pady=10)
 
         bt6 = ttk.Button(bottom_cf, text="Выход", width=10,
                          command=controller._quit)
@@ -1204,13 +1052,6 @@ class PreviewForm(PaymentFrame):
                          command=self._export_to_excel)
         bt4.pack(side=tk.RIGHT, padx=10, pady=10)
 
-        # if self.userID in (6, 24, 42, 76, 20):
-        #     bt4a = ttk.Button(bottom_cf, text="Изменить лимиты", width=20,
-        #                       command=self._alter_limits)
-        #     bt4a.pack(side=tk.RIGHT, padx=10, pady=10)
-        #     bt4b = ttk.Button(bottom_cf, text="Открыть отчёт", width=20,
-        #                       command=self._open_report)
-        #     bt4b.pack(side=tk.RIGHT, padx=10, pady=10)
 
         # Pack frames
         bottom_cf.pack(side=tk.BOTTOM, fill=tk.X, expand=False)
@@ -1223,58 +1064,6 @@ class PreviewForm(PaymentFrame):
                                    cursor="hand2")
         copyright_label.bind("<Button-1>", self._show_about)
         copyright_label.pack(side=tk.RIGHT, anchor=tk.N)
-
-    # def _alter_limits(self):
-    #     """ Create and raise new frame with limits. """
-    #     self._raise_Toplevel(frame=AlterLimits, title='Изменение лимитов',
-    #                          width=400, height=300, static_geometry=False,
-    #                          options=(self.conn,))
-    #
-    # def _alter_request(self):
-    #     """ Create and raise new frame to alter chosen payment. """
-    #     curRow = self.table.focus()
-    #     if curRow:
-    #         request = dict(zip(self.table["columns"],
-    #                            self.table.item(curRow).get('values')))
-    #         request_info = self.conn.get_info_to_alter_payment(request['ID'])
-    #         if not request_info:
-    #             messagebox.showinfo(
-    #                 'Изменение заявки',
-    #                 'Изменять можно только утверждённые заявки.'
-    #             )
-    #             return
-    #         self._raise_Toplevel(frame=AlterRequest, title='Изменение заявки',
-    #                              width=200, height=180, static_geometry=False,
-    #                              options=(self, self.conn, self.userID,
-    #                                       request_info[0]))
-
-    # def _approve_multiple(self):
-    #     """ Allows to approve multiple requests chosen in PreviewForm.
-    #     """
-    #     curItems = (item for item in self.table.get_children()
-    #                 if self.table.tag_has('checked', item))
-    #     if not curItems:
-    #         return
-    #     # store paymentID and SumNoTax
-    #     to_approve = {}
-    #     for curRow in curItems:
-    #         request = self.table.item(curRow).get('values')
-    #         # extract all approvable requests for current user
-    #         if self._is_valid_approval(request[-2]):
-    #             to_approve[request[1]] = float(request[-7].replace(' ', '')
-    #                                            .replace(',', '.'))
-    #     if not to_approve:
-    #         return
-    #     appr_sum = '{:,.0f}'.format(sum(to_approve.values())).replace(',', ' ')
-    #     confirmed = messagebox.askyesno(title='Подтвердите действие',
-    #                                     message='Выбрано заявок: {} на сумму {} грн.\nУтвердить заявки?'
-    #                                     .format(len(to_approve), appr_sum)
-    #                                     )
-    #     if not confirmed:
-    #         return
-    #     for paymentID in to_approve:
-    #         self.conn.update_confirmed(self.userID, paymentID, is_approved=True)
-    #     self._refresh()
 
     def _center_popup_window(self, newlevel, w, h, static_geometry=True):
         screen_width = self.winfo_screenwidth()
@@ -1296,13 +1085,6 @@ class PreviewForm(PaymentFrame):
         elif new_state == 'Show payments for approval':
             self.get_contracts = self._get_payments_for_approval
 
-    # def _check_rights_to_fill_CreateForm(self, to_fill):
-    #     try:
-    #         allowed_offices = self.get_offices(to_fill['МВЗ'])
-    #         if to_fill['Офис'] not in allowed_offices:
-    #             raise NoRightsToFillCreateFormError(to_fill['Офис'])
-    #     except KeyError:
-    #         raise NoRightsToFillCreateFormError(to_fill['МВЗ'])
 
     def _clear_filters(self):
         # self.initiator_box.set('Все')
@@ -1312,10 +1094,6 @@ class PreviewForm(PaymentFrame):
         self.date_type.set('плановая')
         self.date_entry_m.set_default_option()
         self.year.set(datetime.now().year)
-        # self.sumtotal_from.set('0,00')
-        # self.sumtotal_to.set('')
-        # self.nds.set(-1)
-        # self.search_by_num.set('')
 
     def _create_from_current(self):
         """ Raises CreateForm with partially filled labels/entries. """
@@ -1326,12 +1104,6 @@ class PreviewForm(PaymentFrame):
             to_fill = dict(zip(self.table["columns"],
                                self.table.item(curRow).get('values')))
             # print(to_fill)
-            # try:
-            #     self._check_rights_to_fill_CreateForm(to_fill)
-            # except NoRightsToFillCreateFormError as e:
-            #     messagebox.showerror(self.controller.title(),
-            #                          e.message + '\n' + e.expression)
-            #     return
             self.controller._fill_CreateForm(**to_fill)
             self.controller._show_frame('CreateForm')
 
@@ -1363,40 +1135,15 @@ class PreviewForm(PaymentFrame):
     def _get_all_contracts(self):
         """ Extract information from filters and get payments list. """
         filters = {
-            # 'initiator': self.initiatorsID[self.initiator_box.current()],
             'mvz': self.get_mvzSAP(self.mvz_box.get()),
-            # 'office': (self.office_box.current() and
-            #            self.office[self.office_box.current()]),
-            # 'date_type': self.date_type.current(),
-            # 'date_m': self.date_entry_m.get_selected(),
-            # 'date_y': self.year.get() if self.date_entry_y.get() else 0.,
-            # 'sumtotal_from': float(self.sumtotal_from.get_float_form()
-            #                        if self.sum_entry_from.get() else 0),
-            # 'sumtotal_to': float(self.sumtotal_to.get_float_form()
-            #                      if self.sum_entry_to.get() else 0),
-            # 'nds':  self.nds.get(),
             'statusID': (self.statusID[self.status_box.current()]),
             'type_businessID': (
                 self.type_businessID[self.type_business_box.current()])
-            # 'payment_num': self.search_by_num.get().strip()
         }
         # if not filters['date_m']:
         #     raise MonthFilterError(filters['date_m'])
         self.rows = self.conn.get_contracts_list(**filters)
 
-    # def _get_payments_for_approval(self):
-    #     """ Get info about payments nedd to be approved. """
-    #     self.rows = self.conn.get_paymentslist(user_info=self.user_info,
-    #                                            for_approval=True)
-
-    # def _is_valid_approval(self, approvalID):
-    #     """ Check if current user is approval person.
-    #         Treat users with ID 24 and 9 as the same person.
-    #     """
-    #     userID = (9 if self.userID == 24 else self.userID)
-    #     approvalID = (9 if approvalID == 24 else approvalID)
-    #     return (userID == approvalID and (self.user_info.AccessType == 2
-    #                                       or self.user_info.isSuperUser == 1))
     def _init_table(self, parent):
         """ Creates treeview. """
         if isinstance(self.headings, dict):
@@ -1470,9 +1217,6 @@ class PreviewForm(PaymentFrame):
             messagebox.showerror(self.controller.title(), e.message)
             return
         self._show_rows(self.rows)
-        # # Deselect "check_all_rows" checkbutton
-        # if self.EXTENDED_MODE:
-        #     self.all_rows_checked.set(0)
 
     def _resize_columns(self):
         """ Resize columns in treeview. """
@@ -1481,8 +1225,6 @@ class PreviewForm(PaymentFrame):
             self.table.column(head, width=width)
 
     def _row1_pack(self):
-        # self.initiator_label.pack(side=tk.LEFT)
-        # self.initiator_box.pack(side=tk.LEFT, padx=5, pady=5)
         self.mvz_label.pack(side=tk.LEFT)
         self.mvz_box.pack(side=tk.LEFT, padx=5, pady=5)
         self.type_business_label.pack(side=tk.LEFT)
@@ -1495,27 +1237,9 @@ class PreviewForm(PaymentFrame):
 
     def _row2_pack(self):
         pass
-        # self.date_label.pack(side=tk.LEFT)
-        # self.date_type.pack(side=tk.LEFT)
-        # self.date_label_m.pack(side=tk.LEFT)
-        # self.date_entry_m.pack(side=tk.LEFT)
-        # self.date_label_y.pack(side=tk.LEFT)
-        # self.date_entry_y.pack(side=tk.LEFT, anchor=tk.SW, pady=10)
-
-        # self.nds0.pack(side=tk.RIGHT, padx=7)
-        # self.nds7.pack(side=tk.RIGHT, padx=7)
-        # self.nds20.pack(side=tk.RIGHT, padx=7)
-        # self.ndsall.pack(side=tk.RIGHT, padx=7)
-        # self.nds_label.pack(side=tk.RIGHT, padx=5)
-        # self.sum_entry_to.pack(side=tk.RIGHT)
-        # self.sum_label_to.pack(side=tk.RIGHT, padx=2)
-        # self.sum_entry_from.pack(side=tk.RIGHT)
-        # self.sum_label_from.pack(side=tk.RIGHT, padx=2)
 
     def _row3_pack(self):
         pass
-        # self.search_by_num_entry.pack(side=tk.RIGHT, padx=10)
-        # self.search_by_num_label.pack(side=tk.RIGHT, padx=10)
 
     def _show_about(self, event=None):
         """ Raise frame with info about app. """
@@ -1539,14 +1263,6 @@ class PreviewForm(PaymentFrame):
                 newlevel.title('Информация по договору')
                 newlevel.iconbitmap('resources/clipboard.ico')
                 newlevel.bind('<Escape>', lambda e, w=newlevel: w.destroy())
-                # approvalID = self.table.item(curRow).get('values')[-2]
-                # is_valid_approval = self._is_valid_approval(approvalID)
-                # if is_valid_approval:
-                #     ApproveConfirmation(newlevel, self, self.conn, self.userID,
-                #                         self.headings,
-                #                         self.table.item(curRow).get('values'),
-                #                         self.table.item(curRow).get('tags'))
-                # else:
                 DetailedPreview(newlevel, self, self.conn, self.userID,
                                 self.headings,
                                 self.table.item(curRow).get('values'),
@@ -1729,23 +1445,6 @@ class DetailedPreview(tk.Frame):
         self.pack()
 
 
-# class ApproveConfirmation(DetailedPreview):
-#     """ Class with information about reuqest that contains buttons
-#         to approval/decline it. """
-#
-#     def __init__(self, parent, parentform, conn, userID, head, info, tags):
-#         super().__init__(parent, parentform, conn, userID, head, info, tags)
-#
-#     def _close(self, is_approved):
-#         confirmed = messagebox.askyesno(title='Подтвердите действие',
-#                                         message='{} заявку?'.format(
-#                                             'Утвердить' if is_approved else 'Отклонить'))
-#         if confirmed:
-#             self.conn.update_confirmed(self.userID, self.paymentID, is_approved)
-#             self.parentform._refresh()
-#             self.parent.destroy()
-
-
 class AboutFrame(tk.Frame):
     """ Creates a frame with copyright and info about app. """
 
@@ -1769,8 +1468,6 @@ class AboutFrame(tk.Frame):
         self.copyright_text.insert(tk.INSERT,
                                    'Платформа для учёта договоров аренды \n'
                                    '(версия ' + __version__ + ')\n')
-        # self.copyright_text.insert(tk.INSERT, "Инструкция по использованию",
-        #                            hyperlink.add(link_instruction))
         self.copyright_text.insert(tk.INSERT, "\n")
 
         def link_license():
@@ -1793,207 +1490,6 @@ class AboutFrame(tk.Frame):
         self.logo_label.pack(side=tk.LEFT, padx=10)
         self.copyright_text.pack(side=tk.LEFT, padx=10)
         self.pack(fill=tk.BOTH, expand=True)
-
-
-#
-# class AlterLimits(tk.Frame):
-#     """ Creates a frame to manage user limits. """
-#
-#     def __init__(self, parent, conn):
-#         super().__init__(parent)
-#         self.parent = parent
-#         self.conn = conn
-#         self.limits = self.conn.get_limits_info()
-#         # {Column name: width}
-#         self.headings = {'UserID': 6, 'Инициатор': 41,
-#                          'Лимит': 9, 'Обнулять': 8}
-#
-#         # Top Frame with table
-#         self.top = tk.Frame(self, name='top_al')
-#         for j, (header, width) in enumerate(self.headings.items()):
-#             lb = tk.Label(self.top, text=header, font=('Arial', 8, 'bold'),
-#                           relief='sunken', borderwidth=1, width=width)
-#             lb.grid(row=0, column=j, ipadx=5, sticky='nswe')
-#
-#         # Top Canvas Frame to connect Frame and Scrollbar
-#         self.canvas = tk.Canvas(self, borderwidth=0, background="#ffffff",
-#                                 width=500, height=200)
-#
-#         self.table = LabelGrid(self.canvas,
-#                                content=self.limits,
-#                                grid_width=(8, 42, 12, 50)
-#                                )
-#
-#         self.scrolltable = tk.Scrollbar(self, orient="vertical",
-#                                         command=self.canvas.yview)
-#         self.canvas.configure(yscrollcommand=self.scrolltable.set)
-#         self.canvas.create_window((4, 4), window=self.table, anchor="nw",
-#                                   tags="self.table")
-#
-#         self.table.bind("<Configure>", self._onFrameConfigure)
-#
-#         # Bottom Frame with buttons
-#         self.bottom = tk.Frame(self, name='bottom_al')
-#
-#         bt2 = ttk.Button(self.bottom, text="Закрыть", width=10,
-#                          command=self.parent.destroy)
-#         bt2.pack(side=tk.RIGHT, padx=15, pady=5)
-#
-#         bt1 = ttk.Button(self.bottom, text="Сохранить", width=10,
-#                          command=self._update)
-#         bt1.pack(side=tk.RIGHT, padx=15, pady=5)
-#         self._pack_frames()
-#
-#     def _onFrameConfigure(self, event):
-#         """ Reset the scroll region to encompass the inner frame. """
-#         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
-#
-#     def _pack_frames(self):
-#         self.top.pack(side=tk.TOP, fill=tk.X, expand=False, padx=4, pady=2)
-#         self.bottom.pack(side=tk.BOTTOM, fill=tk.X, expand=False)
-#         self.scrolltable.pack(side=tk.RIGHT, fill=tk.Y)
-#         self.canvas.pack(side="left", fill="both", expand=True)
-#         self.pack()
-#
-#     def _update(self):
-#         """ Update information about limits on server.
-#         """
-#         messagetitle = self.parent.title()
-#         try:
-#             limits = self.table.get_values()
-#         except ValueError:
-#             messagebox.showerror(
-#                 messagetitle, 'Введена некорректная сумма'
-#             )
-#             return
-#         update_success = self.conn.update_limits(limits)
-#         if update_success:
-#             messagebox.showinfo(
-#                 messagetitle, 'Изменения внесены'
-#             )
-#             self.parent.destroy()
-#         else:
-#             messagebox.showerror(
-#                 messagetitle, 'Произошла непредвиденная ошибка'
-#             )
-
-
-# class AlterRequest(tk.Frame):
-#     """ Creates a frame to alter chosen request. """
-#
-#     def __init__(self, parent, parentform, conn, userID, request_info):
-#         super().__init__(parent)
-#         self.parent = parent
-#         self.parentform = parentform
-#         self.conn = conn
-#         self.userID = userID
-#         self.paymentID, self.request_date_str, self.request_sum = request_info
-#         self.request_date = datetime.strptime(self.request_date_str,
-#                                               '%Y-%m-%d').date()
-#
-#         # Top Frame with table
-#         self.top = tk.Frame(self, name='top_ar')
-#         self.top_label = tk.Label(self.top,
-#                                   text='Измените необходимое поле:',
-#                                   font=('Arial', 10, 'bold'))
-#
-#         self.altdata_head_label = tk.Label(self.top,
-#                                            text='Изменение даты',
-#                                            font=('Arial', 9, 'bold'), padx=10)
-#         self.altdata_label = tk.Label(self.top,
-#                                       text=(
-#                                           'Укажите новую дату +/- 7 дней в пределах месяца. '
-#                                           'Первичная дата:'),
-#                                       font=('Arial', 9), padx=10)
-#         self.date_start = tk.StringVar()
-#         self.date_start_entry = DateEntry(self.top, width=12, state='readonly',
-#                                           textvariable=self.date_start,
-#                                           font=('Arial', 9),
-#                                           selectmode='day', borderwidth=2,
-#                                           locale='ru_RU')
-#         self.date_start_entry.set_date(self.request_date)
-#
-#         self.altsum_head_label = tk.Label(self.top,
-#                                           text='Изменение суммы',
-#                                           font=('Arial', 9, 'bold'), padx=10)
-#         self.altsum_label = tk.Label(self.top,
-#                                      text='Укажите сумму без НДС. Первичная сумма:',
-#                                      font=('Arial', 9), padx=10)
-#         self.sumtotal = StringSumVar()
-#         self.altsum_entry = tk.Entry(self.top, width=12,
-#                                      textvariable=self.sumtotal)
-#         self.sumtotal.set(self.request_sum)
-#
-#         # Bottom Frame with buttons
-#         self.bottom = tk.Frame(self, name='bottom_ar')
-#
-#         bt2 = ttk.Button(self.bottom, text="Отменить", width=10,
-#                          style='ButtonRed.TButton',
-#                          command=self.parent.destroy)
-#         bt2.pack(side=tk.RIGHT, padx=15, pady=5)
-#
-#         bt1 = ttk.Button(self.bottom, text="Сохранить", width=10,
-#                          style='ButtonGreen.TButton',
-#                          command=self._apply_changes)
-#         bt1.pack(side=tk.LEFT, padx=15, pady=5)
-#         self._pack_frames()
-#
-#     def _apply_changes(self):
-#         try:
-#             self._validate_changes()
-#         except (IncorrectFloatError, PeriodExceededError,
-#                 MonthChangedError, SumExceededError) as e:
-#             messagebox.showerror(self.parent.title(),
-#                                  e.message + '\n' + e.expression)
-#             return
-#         new_date = self.date_start_entry.get_date()
-#         # convert to datetime for SQL
-#         new_date = datetime.combine(new_date, datetime.min.time())
-#         new_sum = Decimal(self.sumtotal.get_float_form()).quantize(
-#             Decimal('.01'))
-#         result = self.conn.alter_payment(self.userID, self.paymentID,
-#                                          new_date, new_sum)
-#         if not result:
-#             messagebox.showerror(self.parent.title(),
-#                                  'Произошла ошибка при выполнении запроса')
-#         else:
-#             messagebox.showinfo(self.parent.title(), 'Запрос выполнен')
-#             self.parentform._refresh()
-#             self.parent.destroy()
-#
-#     def _pack_frames(self):
-#         self.top_label.pack(side=tk.TOP)
-#         self.altdata_head_label.pack(side=tk.TOP)
-#         self.altdata_label.pack(side=tk.TOP)
-#         self.date_start_entry.pack(side=tk.TOP, pady=5)
-#         self.altsum_head_label.pack(side=tk.TOP)
-#         self.altsum_label.pack(side=tk.TOP)
-#         self.altsum_entry.pack(side=tk.TOP)
-#         self.top.pack(side=tk.TOP, fill=tk.X, expand=False, padx=4, pady=2)
-#         self.bottom.pack(side=tk.BOTTOM, fill=tk.X, expand=False)
-#         self.pack()
-#
-#     def _validate_changes(self):
-#         new_date = self.date_start_entry.get_date()
-#         # Input check
-#         try:
-#             new_sum = Decimal(self.sumtotal.get_float_form()).quantize(
-#                 Decimal('.01'))
-#         except ValueError:
-#             raise IncorrectFloatError(self.sumtotal.get())
-#         date_diff = (self.request_date - new_date)
-#         # check if period is not exceeded
-#         if abs(date_diff.days) > 7:
-#             raise PeriodExceededError(str((date_diff.days,
-#                                            self.request_date,
-#                                            new_date))
-#                                       )
-#         # check if month is the same
-#         if self.request_date.month != new_date.month:
-#             raise MonthChangedError(str(self.request_date))
-#         # check if sum is not exceeded
-#         if new_sum > self.request_sum:
-#             raise SumExceededError(str(self.request_sum))
 
 
 if __name__ == '__main__':

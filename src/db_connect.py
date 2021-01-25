@@ -96,12 +96,12 @@ class DBConnect(object):
                                     @TypeBusiness = ?,
                                     @ObjectIDLIst = ?
             '''
-        print(userID, mvz, start_date, finish_date,
-              sum_extra_total, sumtotal, nds, square,
-              contragent, okpo, num_main_contract,
-              num_add_contract, date_main_contract_start,
-              date_add_contract, text, filename,
-              date_main_contract_end, price_meter, type_business,mvz_choice_list)
+        # print(userID, mvz, start_date, finish_date,
+        #       sum_extra_total, sumtotal, nds, square,
+        #       contragent, okpo, num_main_contract,
+        #       num_add_contract, date_main_contract_start,
+        #       date_add_contract, text, filename,
+        #       date_main_contract_end, price_meter, type_business,mvz_choice_list)
         try:
             self.__cursor.execute(query, userID, mvz, start_date, finish_date,
                                   sum_extra_total, sumtotal, nds, square,
@@ -207,6 +207,5 @@ if __name__ == '__main__':
                                      @isSuperUser = 0
                 '''
         print(sql.raw_query(query))
-        # assert sql.raw_query(query)[0][0] == 42, 'Server returns no output.'
     print('Connected successfully.')
     input('Press Enter to exit...')
