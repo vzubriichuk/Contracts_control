@@ -71,7 +71,7 @@ def check_meta_update():
 def main():
     check_meta_update()
     # Check connection to db and permission to work with app
-    # If debug mode then 1 else 0
+    # If development mode then 1 else 0
     db_info = pwd.access_return(1)
     conn = DBConnect(server=db_info.get('Server'),
                      db=db_info.get('DB'),
@@ -99,13 +99,6 @@ def main():
                     'user_info': user_info,
                     'mvz': sql.get_objects(),
                     'type_business': sql.get_type_business(),
-                    # 'pay_conditions': sql.get_pay_conditions(),
-                    # 'allowed_initiators':
-                    #     sql.get_allowed_initiators(user_info.UserID,
-                    #                                user_info.AccessType,
-                    #                                user_info.isSuperUser),
-                    # 'approvals_for_first_stage':
-                    #     sql.get_approvals_for_first_stage(),
                     'status_list': sql.get_status_list()
                     }
             for k, v in refs.items():

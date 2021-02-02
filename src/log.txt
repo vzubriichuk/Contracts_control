@@ -3,3 +3,4 @@
 24-12-2020 17:00:04 'PreviewForm' object has no attribute '_alter_limits'
 24-12-2020 17:00:54 'PreviewForm' object has no attribute '_alter_limits'
 29-12-2020 09:35:55 _on_focus_out_format_sum_decimal() missing 1 required positional argument: 'event'
+25-01-2021 11:46:40 refs[mvz] value is None

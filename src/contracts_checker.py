@@ -80,7 +80,7 @@ def main():
     logo_label = Label(root, image=logo)
     logo_label.pack(side='top', pady=40)
 
-    copyright_label = Label(root, text='© 2020 Офис контроллинга логистики')
+    copyright_label = Label(root, text='© 2020 Офис контролинга логистики')
     copyright_label.pack(side='bottom', pady=5)
 
     label = Label(root,
