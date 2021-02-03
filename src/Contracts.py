@@ -72,22 +72,23 @@ def main():
     check_meta_update()
     # Check connection to db and permission to work with app
     # If development mode then 1 else 0
-    db_info = pwd.access_return(1)
+    db_info = pwd.access_return(0)
     conn = DBConnect(server=db_info.get('Server'),
                      db=db_info.get('DB'),
                      uid=db_info.get('UID'),
                      pwd=db_info.get('PWD'))
     try:
         with conn as sql:
-            UserLogin = getpass.getuser()
-            # UserLogin = 'vi.leonenko'
+            # UserLogin = getpass.getuser()
+            UserLogin = 'vi.leonenko'
             access_permitted = sql.access_check(UserLogin)
             if not access_permitted:
                 tkp.AccessError()
                 sys.exit()
 
             UserInfo = namedtuple('UserInfo',
-                                  ['UserID', 'ShortUserName', 'AccessType']
+                                  ['UserID', 'ShortUserName', 'AccessType',
+                                   'isSuperUser']
                                   )
 
             # load references

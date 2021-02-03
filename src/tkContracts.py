@@ -907,8 +907,7 @@ class PreviewForm(PaymentFrame):
         self.type_businessID, self.type_business = zip(
             *[(None, 'Все'), ] + type_business)
         # print(self.statusID, self.status_list)
-        # EXTENDED_MODE activates extended selectmode for treeview, realized
-        # using checkboxes, and allows to approve multiple requests
+
         # List of functions to get payments
         # determines what payments will be shown when refreshing
         self.contracts_load_list = [self._get_all_contracts]
@@ -1336,7 +1335,6 @@ class DetailedPreview(tk.Frame):
         self.userID = userID
         self.rowtags = tags
         self.filename_preview = str()
-
         # Top Frame with description and user name
         self.top = tk.Frame(self, name='top_cf', padx=5, pady=5)
 
@@ -1387,10 +1385,11 @@ class DetailedPreview(tk.Frame):
                          command=self.parent.destroy)
         bt2.pack(side=tk.RIGHT, padx=15, pady=10)
 
-        # if self.userID == self.initiatorID and 'Отозв.' not in self.rowtags:
-        bt3 = ttk.Button(self.bottom, text="Удалить договор", width=18,
-                         command=self._delete)
-        bt3.pack(side=tk.RIGHT, padx=15, pady=10)
+        # show delete button for users
+        if self.userID in (2, 6, 1):
+            bt3 = ttk.Button(self.bottom, text="Удалить договор", width=18,
+                             command=self._delete)
+            bt3.pack(side=tk.RIGHT, padx=15, pady=10)
 
     def _delete(self):
         mboxname = 'Удаление договора'

@@ -121,7 +121,7 @@ class DBConnect(object):
         """ Returns information about current user based on ORIGINAL_LOGIN().
         """
         query = '''
-        select UserID, ShortUserName, AccessType
+        select UserID, ShortUserName, AccessType, isSuperUser
         from contracts.People
         where UserLogin = ?
         '''

@@ -16,7 +16,7 @@ def export_to_excel(headers, rows):
         # Create a new Excel file and add a worksheet
         time_txt = time.strftime("%d-%m-%Y %H.%M.%S", time.localtime())
         wbpath = path.join(Path.home(), 'Desktop',
-                              'Заявки на платежи ({}).xlsx'.format(time_txt))
+                              'Реестр договоров ({}).xlsx'.format(time_txt))
         wb = xlsxwriter.Workbook(wbpath)
         ws = wb.add_worksheet()
         # default format
