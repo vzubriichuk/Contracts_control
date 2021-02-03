@@ -1172,7 +1172,7 @@ class PreviewForm(PaymentFrame):
                 self.table.column(head, width=50 * len(head), anchor=tk.CENTER)
 
         for tag, bg in zip(self.status_list[1:3],
-                           ('#e0e0d1', '#9ae59a')):
+                           ('#e0e0d1', '#C7D59F')):
             self.table.tag_configure(tag, background=bg)
 
         self.table.bind('<Double-1>', self._show_detail)
