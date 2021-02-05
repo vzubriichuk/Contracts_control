@@ -165,7 +165,8 @@ class PaymentApp(tk.Tk):
         self.state_PreviewForm = 'normal'
         # geometry_storage {Framename:(width, height)}
         self._geometry = {'PreviewForm': (1200, 550),
-                          'CreateForm': (850, 440)}
+                          'CreateForm': (850, 440),
+                          'UpdateForm': (850, 440)}
         # Virtual event for creating request
         self.event_add("<<create>>", "<Control-S>", "<Control-s>",
                        "<Control-Ucircumflex>", "<Control-ucircumflex>",
@@ -223,7 +224,7 @@ class PaymentApp(tk.Tk):
         container.grid_columnconfigure(0, weight=1)
 
         self._frames = {}
-        for F in (PreviewForm, CreateForm):
+        for F in (PreviewForm, CreateForm, UpdateForm):
             frame_name = F.__name__
             frame = F(parent=container, controller=self, **kwargs)
             self._frames[frame_name] = frame
@@ -258,6 +259,22 @@ class PaymentApp(tk.Tk):
                                      date_main_contract_heading_end,
                                      contragent_heading, type_business, okpo)
 
+    def _fill_UpdateForm(self, Объект, **kwargs):
+        """ Control function to transfer data from Preview- to CreateForm. """
+        # print(kwargs)
+        num_main_contract_heading = kwargs['№ договора']
+        date_main_contract_heading = kwargs['Дата договора (начало)']
+        date_main_contract_heading_end = kwargs['Дата договора (конец)']
+        contragent_heading = kwargs['Арендодатель']
+        type_business = kwargs['Бизнес']
+        okpo = kwargs['ЕГРПОУ']
+        frame = self._frames['UpdateForm']
+        frame._fill_from_PreviewForm(Объект, num_main_contract_heading,
+                                     date_main_contract_heading,
+                                     date_main_contract_heading_end,
+                                     contragent_heading, type_business, okpo)
+
+
     def _onKeyRelease(*args):
         event = args[1]
         # check if Ctrl pressed
@@ -272,7 +289,7 @@ class PaymentApp(tk.Tk):
 
     def _show_frame(self, frame_name):
         """ Show a frame for the given frame name. """
-        if frame_name == 'CreateForm':
+        if frame_name == 'CreateForm' or frame_name == 'UpdateForm':
             # since we have only two forms, when we activating CreateForm
             # we know by exception that PreviewForm is active
             self.state_PreviewForm = self.state()
@@ -291,6 +308,7 @@ class PaymentApp(tk.Tk):
                 frame._refresh()
                 # Clear form in CreateFrom by autofill form
                 self._frames['CreateForm']._clear()
+                self._frames['UpdateForm']._clear()
         finally:
             self.active_frame = frame_name
 
@@ -430,7 +448,6 @@ class CreateForm(PaymentFrame):
                                                  onvalue=1, offvalue=0,
                                                  command=self._mvz_choice_list)
 
-
         self.square = StringSumVar()
         self.square.set('0,00')
         self.square_label = tk.Label(row1_cf, text='Площадь, м²')
@@ -473,7 +490,8 @@ class CreateForm(PaymentFrame):
                                           )
         self.square_cost_entry.bind("<FocusIn>", self._on_focus_in_format_sum)
         # Change format price to max decimal format
-        self.square_cost_entry.bind("<FocusOut>", self._on_focus_out_format_sum_decimal)
+        self.square_cost_entry.bind("<FocusOut>",
+                                    self._on_focus_out_format_sum_decimal)
 
         self._row2_pack()
 
@@ -557,7 +575,6 @@ class CreateForm(PaymentFrame):
         self.nds0 = ttk.Radiobutton(row5_cf, text="0 %", variable=self.nds,
                                     value=0)
 
-
         self._row5_pack()
 
         # Six Fill Frame
@@ -619,7 +636,6 @@ class CreateForm(PaymentFrame):
         row6_cf.pack(side=tk.TOP, fill=tk.X, pady=5)
         text_cf.pack(side=tk.TOP, fill=tk.X, expand=True, padx=15, pady=15)
 
-
     def _mvz_choice_list(self):
         self.mvz_choice_list = []
         for name, var in self.choices.items():
@@ -639,6 +655,7 @@ class CreateForm(PaymentFrame):
                                                  onvalue=1, offvalue=0,
                                                  command=self._mvz_choice_list)
             # print(self.mvz_choice_list)
+
     def _file_opener(self):
         filename = fd.askopenfilename()
         if filename:
@@ -897,6 +914,514 @@ class CreateForm(PaymentFrame):
             return False
         return True
 
+class UpdateForm(PaymentFrame):
+    def __init__(self, parent, controller, connection, user_info, mvz,
+                 type_business, **kwargs):
+        super().__init__(parent, controller, connection, user_info, mvz)
+        self.upload_filename = str()
+        # print(self.mvz)
+        # Top Frame with description and user name
+        top = tk.Frame(self, name='top_cf', padx=5)
+        self.main_label = tk.Label(top,
+                                   text='Форма внесения дополнительного '
+                                        'соглашения к основому договору',
+                                   padx=10, font=('Arial', 8, 'bold'))
+        self.type_businessID, self.type_business = zip(*type_business)
+        self.mvz_choice_list = []
+        self._add_user_label(top)
+        self._top_pack()
+
+        # First Fill Frame with (MVZ, business)
+        row1_cf = tk.Frame(self, name='row1_cf', padx=15)
+
+        self.mvz_label = tk.Label(row1_cf, text='Объект', padx=7)
+        self.mvz_current = tk.StringVar()
+        self.mvz_box = ttk.OptionMenu(row1_cf, self.mvz_current, '',
+                                      *self.mvz.keys(),
+                                      command=self._restraint_by_mvz)
+        self.mvz_box.config(width=40)
+        # self.mvz_sap_label = tk.Label(row1_cf, text='SAPmvz', padx=10)
+        # self.mvz_sap = tk.Label(row1_cf, padx=10, bg='lightgray', width=11)
+
+        self.menubutton = tk.Menubutton(row1_cf, text="Выбрать адреса договора",
+                                        indicatoron=True, borderwidth=1,
+                                        relief="raised")
+        self.menu_choice_mvz = tk.Menu(self.menubutton, tearoff=False)
+        self.menubutton.configure(menu=self.menu_choice_mvz)
+
+        self.choices = {}
+        for choice in self.mvz.keys():
+            self.choices[choice] = tk.IntVar(value=0)
+            self.menu_choice_mvz.add_checkbutton(label=choice,
+                                                 variable=self.choices[choice],
+                                                 onvalue=1, offvalue=0,
+                                                 command=self._mvz_choice_list)
+
+        self.square = StringSumVar()
+        self.square.set('0,00')
+        self.square_label = tk.Label(row1_cf, text='Площадь, м²')
+        vcmd = (self.register(self._validate_sum))
+        self.square_entry = tk.Entry(row1_cf, name='square_entry', width=18,
+                                     textvariable=self.square, validate='all',
+                                     validatecommand=(vcmd, '%P')
+                                     )
+        self.square_entry.bind("<FocusIn>", self._on_focus_in_format_sum)
+        self.square_entry.bind("<FocusOut>", self._on_focus_out_format_sum)
+
+        self._row1_pack()
+
+        # Second Fill Frame
+        row2_cf = tk.Frame(self, name='row2_cf', padx=15)
+        self.type_business_label = tk.Label(row2_cf, text='Тип бизнеса', padx=7)
+        self.type_business_box = ttk.Combobox(row2_cf, width=20,
+                                              state='readonly')
+        self.type_business_box['values'] = self.type_business
+        self.type_business_box.configure(state="normal")
+        self.date_main_label_start = tk.Label(row2_cf, text='Договор с:',
+                                              padx=12)
+        self.date_main_start = tk.StringVar()
+        self.date_main_contract_start = DateEntry(row2_cf, width=16,
+                                                  state='readonly',
+                                                  textvariable=self.date_main_start,
+                                                  font=('Arial', 9),
+                                                  selectmode='day',
+                                                  borderwidth=2,
+                                                  locale='ru_RU')
+        self.square_cost = StringSumVar()
+        self.square_cost.set('0,00')
+        self.square_cost_label = tk.Label(row2_cf, text='Цена за 1м², грн')
+        vcmd = (self.register(self._validate_sum))
+        self.square_cost_entry = tk.Entry(row2_cf, name='square_cost_entry',
+                                          width=18,
+                                          textvariable=self.square_cost,
+                                          validate='all',
+                                          validatecommand=(vcmd, '%P')
+                                          )
+        self.square_cost_entry.bind("<FocusIn>", self._on_focus_in_format_sum)
+        # Change format price to max decimal format
+        self.square_cost_entry.bind("<FocusOut>",
+                                    self._on_focus_out_format_sum_decimal)
+
+        self._row2_pack()
+
+        # Third Fill Frame
+        row3_cf = tk.Frame(self, name='row3_cf', padx=15)
+
+        self.num_main_contract = tk.Label(row3_cf, text='№ договора', padx=0)
+        self.num_main_contract_entry = tk.Entry(row3_cf, width=23)
+        self.date_main_label_end = tk.Label(row3_cf, text='Договор по:', padx=7)
+        self.date_main_end = tk.StringVar()
+        self.date_main_contract_end = DateEntry(row3_cf, width=16,
+                                                state='readonly',
+                                                textvariable=self.date_main_end,
+                                                font=('Arial', 9),
+                                                selectmode='day', borderwidth=2,
+                                                locale='ru_RU')
+        self.sum_extra_label = tk.Label(row3_cf,
+                                        text='Сумма экспл. без НДС, грн',
+                                        padx=3)
+        self.sum_extra_total = StringSumVar()
+        self.sum_extra_total.set('0,00')
+        vcmd = (self.register(self._validate_sum))
+        self.sum_extra_entry = tk.Entry(row3_cf, name='sum_extra_entry',
+                                        width=18,
+                                        textvariable=self.sum_extra_total,
+                                        validate='all',
+                                        validatecommand=(vcmd, '%P')
+                                        )
+        self.sum_extra_entry.bind("<FocusIn>", self._on_focus_in_format_sum)
+        self.sum_extra_entry.bind("<FocusOut>", self._on_focus_out_format_sum)
+
+        self._row3_pack()
+
+        # Fourth Fill Frame
+        row4_cf = tk.Frame(self, name='row4_cf', padx=15)
+
+        self.num_add_contract = tk.Label(row4_cf, text='№ доп.дог.  ', padx=0)
+        self.num_add_contract_entry = tk.Entry(row4_cf, width=23)
+        self.date_add_label = tk.Label(row4_cf, text='Дата доп.', padx=7)
+        self.date_add = tk.StringVar()
+        self.date_add_contract = DateEntry(row4_cf, width=16, state='readonly',
+                                           textvariable=self.date_add,
+                                           font=('Arial', 9),
+                                           selectmode='day', borderwidth=2,
+                                           locale='ru_RU')
+        self.sum_label = tk.Label(row4_cf, text='Сумма всего без НДС, грн',
+                                  padx=3)
+        self.sumtotal = tk.StringVar(row4_cf, value='0.00')
+        vcmd = (self.register(self._validate_sum))
+        # self.sum_entry = tk.Entry(row4_cf, textvariable=self.sumtotal, width=18)
+        self.sum_entry = tk.Entry(row4_cf, name='sum_entry',
+                                  width=18,
+                                  textvariable=self.sumtotal,
+                                  validate='all',
+                                  validatecommand=(vcmd, '%P')
+                                  )
+        self.sum_entry.config(background='lightgrey')
+        # self.sum_entry.config(state='disabled')
+
+        self.sum_entry.bind("<FocusIn>", self._on_focus_in_format_sum)
+        self.sum_entry.bind("<FocusOut>", self._on_focus_out_format_sum)
+
+        self._row4_pack()
+
+        # Fifth Fill Frame
+        row5_cf = tk.Frame(self, name='row5_cf', padx=15)
+        self.contragent_label = tk.Label(row5_cf, text='Арендодатель')
+        self.contragent_entry = tk.Entry(row5_cf, width=23)
+        self.date_start_label = tk.Label(row5_cf, text='Период с:', padx=17)
+        self.date_start = tk.StringVar()
+        self.date_start_entry = DateEntry(row5_cf, width=16, state='readonly',
+                                          textvariable=self.date_start,
+                                          font=('Arial', 9),
+                                          selectmode='day', borderwidth=2,
+                                          locale='ru_RU')
+        self.nds_label = tk.Label(row5_cf, text='Ставка НДС', padx=0)
+        self.nds = tk.IntVar()
+        self.nds.set(20)
+        self.nds20 = ttk.Radiobutton(row5_cf, text="20 %", variable=self.nds,
+                                     value=20)
+        self.nds0 = ttk.Radiobutton(row5_cf, text="0 %", variable=self.nds,
+                                    value=0)
+
+        self._row5_pack()
+
+        # Six Fill Frame
+        row6_cf = tk.Frame(self, name='row6_cf', padx=15)
+
+        self.okpo_label = tk.Label(row6_cf, text='ЕГРПОУ           ')
+        self.okpo_entry = tk.Entry(row6_cf, width=23)
+        self.date_finish_label = tk.Label(row6_cf, text='Период по:', padx=16)
+        self.date_finish = tk.StringVar()
+        self.date_finish_entry = DateEntry(row6_cf, width=16, state='readonly',
+                                           textvariable=self.date_finish,
+                                           font=('Arial', 9),
+                                           selectmode='day', borderwidth=2,
+                                           locale='ru_RU')
+        self.file_label = tk.Label(row6_cf, text='Файл не выбран')
+        bt_upload = ttk.Button(row6_cf, text="Выбрать файл", width=20,
+                               command=self._file_opener,
+                               style='ButtonGreen.TButton')
+        bt_upload.pack(side=tk.RIGHT, padx=15, pady=0)
+
+        # Text Frame
+        text_cf = ttk.LabelFrame(self, text=' Комментарий к договору ',
+                                 name='text_cf')
+
+        self.customFont = tkFont.Font(family="Arial", size=10)
+        self.desc_text = tk.Text(text_cf,
+                                 font=self.customFont)  # input and output box
+        self.desc_text.configure(width=115)
+        self.desc_text.pack(in_=text_cf, expand=True)
+
+        self._row6_pack()
+
+        # Bottom Frame with buttons
+        bottom_cf = tk.Frame(self, name='bottom_cf')
+
+        bt3 = ttk.Button(bottom_cf, text="Назад", width=10,
+                         # command=self._deselect_checked_mvz)
+                         # command=self.button_back(controller))
+                         command=lambda: controller._show_frame('PreviewForm'))
+        bt3.pack(side=tk.RIGHT, padx=15, pady=10)
+
+        bt2 = ttk.Button(bottom_cf, text="Очистить", width=10,
+                         command=self._clear, style='ButtonRed.TButton')
+        bt2.pack(side=tk.RIGHT, padx=15, pady=10)
+
+        bt1 = ttk.Button(bottom_cf, text="Создать", width=10,
+                         command=self._create_request,
+                         style='ButtonGreen.TButton')
+        bt1.pack(side=tk.RIGHT, padx=15, pady=10)
+
+        # Pack frames
+        top.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        bottom_cf.pack(side=tk.BOTTOM, fill=tk.X)
+        row1_cf.pack(side=tk.TOP, fill=tk.X, pady=5)
+        row2_cf.pack(side=tk.TOP, fill=tk.X, pady=5)
+        row3_cf.pack(side=tk.TOP, fill=tk.X, pady=5)
+        row4_cf.pack(side=tk.TOP, fill=tk.X, pady=5)
+        row5_cf.pack(side=tk.TOP, fill=tk.X, pady=5)
+        row6_cf.pack(side=tk.TOP, fill=tk.X, pady=5)
+        text_cf.pack(side=tk.TOP, fill=tk.X, expand=True, padx=15, pady=15)
+
+    def _mvz_choice_list(self):
+        self.mvz_choice_list = []
+        for name, var in self.choices.items():
+            if var.get() == 1:
+                self.mvz_choice_list.append(self.get_mvzID(name))
+
+    # Deselect checked row in menu (destroy and create menubutton again)
+    def _deselect_checked_mvz(self):
+        self.mvz_choice_list.clear()
+        self.menu_choice_mvz.destroy()
+        self.menu_choice_mvz = tk.Menu(self.menubutton, tearoff=False)
+        self.menubutton.configure(menu=self.menu_choice_mvz)
+        for choice in self.mvz.keys():
+            self.choices[choice] = tk.IntVar(value=0)
+            self.menu_choice_mvz.add_checkbutton(label=choice,
+                                                 variable=self.choices[choice],
+                                                 onvalue=1, offvalue=0,
+                                                 command=self._mvz_choice_list)
+            # print(self.mvz_choice_list)
+
+    def _file_opener(self):
+        filename = fd.askopenfilename()
+        if filename:
+            copy2(filename, UPLOAD_PATH)
+            path = Path(filename)
+            self.upload_filename = path.name
+            self.file_label.config(text='Файл добавлен')
+
+    def _remove_upload_file(self):
+        os.remove(UPLOAD_PATH + '\\' + self.upload_filename)
+        self.file_label.config(text='Файл не выбран')
+
+    def _multiply_cost_square(self):
+        square_get = float(self.square.get_float_form()
+                           if self.square_entry.get() else 0)
+        square_cost_get = float(self.square_cost.get_float_form()
+                                if self.square_cost_entry.get() else 0)
+        total_square_cost = square_get * square_cost_get
+        if total_square_cost:
+            self.sum_entry.delete(0, tk.END)
+            self.sum_entry.insert(0, total_square_cost)
+
+    def _clear(self):
+        self.type_business_box.configure(state="readonly")
+        self.num_main_contract_entry.configure(state="normal")
+        self.date_main_contract_start.configure(state="normal")
+        self.date_main_contract_end.configure(state="normal")
+        self.contragent_entry.configure(state="normal")
+        self.num_main_contract_entry.delete(0, tk.END)
+        self.contragent_entry.delete(0, tk.END)
+        self.square.set('0,00')
+        self.square_cost_entry.delete(0, tk.END)
+        self.square_cost_entry.insert(0, '0,00')
+        self.num_main_contract_entry.delete(0, tk.END)
+        self.num_add_contract_entry.delete(0, tk.END)
+        self.okpo_entry.delete(0, tk.END)
+        self.sum_extra_total.set('0,00')
+        self.sumtotal.set('0,00')
+        self.nds.set(20)
+        self.desc_text.delete("1.0", tk.END)
+        self.date_start_entry.set_date(datetime.now())
+        self.date_finish_entry.set_date(datetime.now())
+        self.date_add_contract.set_date(datetime.now())
+        self.date_main_contract_start.set_date(datetime.now())
+        self.date_main_contract_end.set_date(datetime.now())
+        self._deselect_checked_mvz()
+
+    def _fill_from_PreviewForm(self, mvz, num_main_contract_entry,
+                               date_main_contract_start, date_main_contract_end
+                               , contragent, type_business, okpo):
+        """ When button "Добавить из договора" from PreviewForm is activated,
+        fill some fields taken from choosed in PreviewForm request.
+        """
+        self.mvz_current.set(mvz)
+        self.type_business_box.set(type_business)
+        self.type_business_box.configure(state="readonly")
+        self.num_main_contract_entry.delete(0, tk.END)
+        self.num_main_contract_entry.insert(0, num_main_contract_entry)
+        self.num_main_contract_entry.configure(state="readonly")
+        self.date_main_contract_start.set_date(
+            self._convert_str_date(date_main_contract_start))
+        self.date_main_contract_start.configure(state="readonly")
+        self.date_main_contract_end.set_date(
+            self._convert_str_date(date_main_contract_end))
+        self.date_main_contract_end.configure(state="readonly")
+        self.mvz_sap = self.get_mvzSAP(self.mvz_current.get())
+        self.contragent_entry.delete(0, tk.END)
+        self.contragent_entry.insert(0, contragent)
+        self.contragent_entry.configure(state="readonly")
+        self.okpo_entry.insert(0, okpo)
+        self.square_cost.set('0,00')
+
+    def _convert_date(self, date, output=None):
+        """ Take date and convert it into output format.
+            If output is None datetime object is returned.
+
+            date: str in format '%d[./]%m[./]%y' or '%d[./]%m[./]%Y'.
+            output: str or None, output format.
+        """
+        date = date.replace('/', '.')
+        try:
+            dat = datetime.strptime(date, '%d.%m.%y')
+        except ValueError:
+            dat = datetime.strptime(date, '%d.%m.%Y')
+        if output:
+            return dat.strftime(output)
+        return dat
+
+    def _create_request(self):
+        messagetitle = 'Добавление договора'
+        sumtotal = self.sum_entry.get()
+        sum_extra_total = float(self.sum_extra_total.get_float_form()
+                                if self.sum_extra_entry.get() else 0)
+        square = float(self.square.get_float_form()
+                       if self.square_entry.get() else 0)
+        price_meter = float(self.square_cost.get_float_form()
+                            if self.square_cost_entry.get() else 0)
+        is_validated = self._validate_request_creation(messagetitle, sumtotal)
+        if not is_validated:
+            return
+
+        request = {'mvz': self.mvz_sap,  # self.mvz_sap.cget('text') or None,
+                   # 'office': self.office_box.get(),
+                   # 'categoryID': self.categories[self.category_box.get()],
+                   'start_date': self._convert_date(
+                       self.date_start_entry.get()),
+                   'finish_date': self._convert_date(
+                       self.date_finish_entry.get()),
+                   'sum_extra_total': sum_extra_total,
+                   'sumtotal': sumtotal,
+                   'nds': self.nds.get(),
+                   'square': square,
+                   'contragent': self.contragent_entry.get().strip().replace(
+                       '\n', '') or None,
+                   'okpo': self.okpo_entry.get(),
+                   'num_main_contract': self.num_main_contract_entry.get(),
+                   'num_add_contract': self.num_add_contract_entry.get(),
+                   'date_main_contract_start': self._convert_date(
+                       self.date_main_contract_start.get()),
+                   'date_add_contract': self._convert_date(
+                       self.date_add_contract.get()),
+                   'text': self.desc_text.get("1.0", tk.END).strip(),
+                   'filename': self.upload_filename,
+                   'date_main_contract_end': self._convert_date(
+                       self.date_main_contract_end.get()),
+                   'price_meter': price_meter,
+                   'type_business': self.type_business_box.get(),
+                   'mvz_choice_list': ','.join(map(str, self.mvz_choice_list))
+
+                   }
+        created_success = self.conn.create_request(userID=self.userID,
+                                                   **request)
+        if created_success == 1:
+            messagebox.showinfo(
+                messagetitle, 'Договор добавлен'
+            )
+            self._clear()
+            self.controller._show_frame('PreviewForm')
+        else:
+            # self._remove_upload_file()
+            messagebox.showerror(
+                messagetitle, 'Произошла ошибка при добавлении договора'
+            )
+
+            # МВЗ, Договор, Арендодатель, ЕГРПОУ, Описание
+
+    def _convert_str_date(self, date):
+        """ Take str and convert it into date format.
+            date: str in format '%d[./]%m[./]%y' or '%d[./]%m[./]%Y'.
+        """
+        date_time_str = date
+        date_time_obj = dt.datetime.strptime(date_time_str, '%Y-%m-%d')
+        return date_time_obj.date()
+
+    def _restraint_by_mvz(self, event):
+        """ Shows mvz_sap that corresponds to chosen MVZ and restraint offices.
+            If 1 office is available, choose it, otherwise make box active.
+        """
+        # tcl language has no notion of None or a null value, so use '' instead
+        self.mvz_sap = self.get_mvzSAP(self.mvz_current.get()) or ''
+
+    def _row1_pack(self):
+        self.mvz_label.pack(side=tk.LEFT)
+        self.mvz_box.pack(side=tk.LEFT, padx=10)
+        # self.mvz_sap_label.pack(side=tk.LEFT)
+        # self.mvz_sap.pack(side=tk.LEFT)
+        self.menubutton.pack(side=tk.LEFT, padx=10)
+        self.square_entry.pack(side=tk.RIGHT, padx=10)
+        self.square_label.pack(side=tk.RIGHT, padx=10)
+
+    def _row2_pack(self):
+        self.type_business_label.pack(side=tk.LEFT)
+        self.type_business_box.pack(side=tk.LEFT, padx=17)
+        self.date_main_label_start.pack(side=tk.LEFT)
+        self.date_main_contract_start.pack(side=tk.LEFT, padx=0)
+        self.square_cost_entry.pack(side=tk.RIGHT, padx=10)
+        self.square_cost_label.pack(side=tk.RIGHT, padx=10)
+
+    def _row3_pack(self):
+        self.num_main_contract.pack(side=tk.LEFT, padx=7)
+        self.num_main_contract_entry.pack(side=tk.LEFT, padx=19)
+        self.date_main_label_end.pack(side=tk.LEFT)
+        self.date_main_contract_end.pack(side=tk.LEFT, padx=0)
+        self.sum_extra_entry.pack(side=tk.RIGHT, padx=11)
+        self.sum_extra_label.pack(side=tk.RIGHT, padx=0)
+
+    def _row4_pack(self):
+        self.num_add_contract.pack(side=tk.LEFT, padx=7)
+        self.num_add_contract_entry.pack(side=tk.LEFT, padx=19)
+        self.date_add_label.pack(side=tk.LEFT)
+        self.date_add_contract.pack(side=tk.LEFT, padx=18)
+        self.sum_entry.pack(side=tk.RIGHT, padx=11)
+        self.sum_label.pack(side=tk.RIGHT, padx=0)
+
+    def _row5_pack(self):
+        self.contragent_label.pack(side=tk.LEFT, padx=7)
+        self.contragent_entry.pack(side=tk.LEFT, padx=7)
+        self.date_start_label.pack(side=tk.LEFT)
+        self.date_start_entry.pack(side=tk.LEFT, padx=6)
+        self.nds0.pack(side=tk.RIGHT, padx=7)
+        self.nds20.pack(side=tk.RIGHT, padx=8)
+        self.nds_label.pack(side=tk.RIGHT)
+
+    def _row6_pack(self):
+        self.okpo_label.pack(side=tk.LEFT, padx=7)
+        self.okpo_entry.pack(side=tk.LEFT, padx=7)
+        self.date_finish_label.pack(side=tk.LEFT)
+        self.date_finish_entry.pack(side=tk.LEFT, padx=0)
+        self.file_label.pack(side=tk.RIGHT, padx=0)
+
+    def _top_pack(self):
+        self.main_label.pack(side=tk.TOP, expand=False, anchor=tk.NW)
+
+    def _validate_request_creation(self, messagetitle, sumtotal):
+        """ Check if all fields are filled properly. """
+        if not self.mvz_current.get():
+            messagebox.showerror(
+                messagetitle, 'Не выбран объект'
+            )
+            return False
+
+        if not self.mvz_choice_list:
+            messagebox.showerror(
+                messagetitle, 'Не выбраны адреса к договору'
+            )
+            return False
+        if not self.type_business_box.get():
+            messagebox.showerror(
+                messagetitle, 'Не выбран тип бизнеса'
+            )
+            return False
+        if not self.num_main_contract_entry.get():
+            messagebox.showerror(
+                messagetitle, 'Не указан номер основного договора'
+            )
+            return False
+        if not self.num_add_contract_entry.get():
+            messagebox.showerror(
+                messagetitle, 'Не указан номер дополнительного соглашения'
+            )
+            return False
+        if not self.contragent_entry.get():
+            messagebox.showerror(
+                messagetitle, 'Не указан арендодатель'
+            )
+            return False
+        if ast.literal_eval(self.square_entry.get()[0]) == 0:
+            messagebox.showerror(
+                messagetitle, 'Не указана площадь аренды'
+            )
+            return False
+        if ast.literal_eval(self.square_cost_entry.get()[0]) == 0:
+            messagebox.showerror(
+                messagetitle, 'Не указана стоимость за 1 кв.м.'
+            )
+            return False
+        return True
 
 class PreviewForm(PaymentFrame):
     def __init__(self, parent, controller, connection, user_info,
@@ -982,7 +1507,6 @@ class PreviewForm(PaymentFrame):
         # Third Fill Frame (checkbox + button to apply filter)
         row3_cf = tk.Frame(filterframe, name='row3_cf', padx=15)
 
-
         # Pack row3_cf
         self._row3_pack()
         row3_cf.pack(side=tk.TOP, fill=tk.X, pady=10)
@@ -1038,6 +1562,10 @@ class PreviewForm(PaymentFrame):
                              command=self._create_from_current)
             bt2.pack(side=tk.LEFT, padx=10, pady=10)
 
+            bt3 = ttk.Button(bottom_cf, text="Редактировать",
+                             width=20,
+                             command=self._edit_current_contract)
+            bt3.pack(side=tk.LEFT, padx=10, pady=10)
 
         bt6 = ttk.Button(bottom_cf, text="Выход", width=10,
                          command=controller._quit)
@@ -1050,7 +1578,6 @@ class PreviewForm(PaymentFrame):
         bt4 = ttk.Button(bottom_cf, text="Экспорт в Excel", width=15,
                          command=self._export_to_excel)
         bt4.pack(side=tk.RIGHT, padx=10, pady=10)
-
 
         # Pack frames
         bottom_cf.pack(side=tk.BOTTOM, fill=tk.X, expand=False)
@@ -1084,7 +1611,6 @@ class PreviewForm(PaymentFrame):
         elif new_state == 'Show payments for approval':
             self.get_contracts = self._get_payments_for_approval
 
-
     def _clear_filters(self):
         # self.initiator_box.set('Все')
         self.mvz_box.set('Все')
@@ -1105,6 +1631,18 @@ class PreviewForm(PaymentFrame):
             # print(to_fill)
             self.controller._fill_CreateForm(**to_fill)
             self.controller._show_frame('CreateForm')
+
+    def _edit_current_contract(self):
+        """ Raises UpdateForm with partially filled labels/entries. """
+        curRow = self.table.focus()
+
+        if curRow:
+            # extract info to be putted in CreateForm
+            to_fill = dict(zip(self.table["columns"],
+                               self.table.item(curRow).get('values')))
+            # print(to_fill)
+            self.controller._fill_UpdateForm(**to_fill)
+            self.controller._show_frame('UpdateForm')
 
     def _delete_current(self):
         """ Raises CreateForm with partially filled labels/entries. """
