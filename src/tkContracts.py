@@ -1590,10 +1590,11 @@ class PreviewForm(PaymentFrame):
                              command=self._create_from_current)
             bt2.pack(side=tk.LEFT, padx=10, pady=10)
 
-            bt3 = ttk.Button(bottom_cf, text="Редактировать",
-                             width=20,
-                             command=self._edit_current_contract)
-            bt3.pack(side=tk.LEFT, padx=10, pady=10)
+            if self.userID in (2, 6, 1):
+                bt3 = ttk.Button(bottom_cf, text="Редактировать",
+                                 width=20,
+                                 command=self._edit_current_contract)
+                bt3.pack(side=tk.LEFT, padx=10, pady=10)
 
         bt6 = ttk.Button(bottom_cf, text="Выход", width=10,
                          command=controller._quit)
