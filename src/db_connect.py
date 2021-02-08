@@ -175,6 +175,15 @@ class DBConnect(object):
         return contracts
 
     @monitor_network_state
+    def get_current_contract(self, contractID):
+        """ Returns contract info from DB.
+        """
+        query = "exec contracts.get_current_contract @contractID = ?"
+        self.__cursor.execute(query, contractID)
+        return self.__cursor.fetchone()
+
+
+    @monitor_network_state
     def get_status_list(self):
         """ Returns status list.
         """

@@ -262,18 +262,30 @@ class PaymentApp(tk.Tk):
     def _fill_UpdateForm(self, Объект, **kwargs):
         """ Control function to transfer data from Preview- to CreateForm. """
         # print(kwargs)
-        num_main_contract_heading = kwargs['№ договора']
-        date_main_contract_heading = kwargs['Дата договора (начало)']
-        date_main_contract_heading_end = kwargs['Дата договора (конец)']
-        contragent_heading = kwargs['Арендодатель']
-        type_business = kwargs['Бизнес']
+        num_main_contract = kwargs['№ договора']
+        date_main_contract_start = kwargs['Дата договора (начало)']
+        date_main_contract_end = kwargs['Дата договора (конец)']
+        add_contract_num = kwargs['№ доп.согл.']
+        date_add_contract = kwargs['Дата доп.согл.']
+        date_add_contract_start = kwargs['Дата с']
+        date_add_contract_end = kwargs['Дата по']
+        square = kwargs['Площадь']
+        price1m2 = kwargs['Цена за 1м²']
+        cost = kwargs['Сумма без НДС']
+        contragent = kwargs['Арендодатель']
+        business = kwargs['Бизнес']
         okpo = kwargs['ЕГРПОУ']
+        description = kwargs['Описание']
+        cost_extra = kwargs['Сумма экспл. без НДС']
         frame = self._frames['UpdateForm']
-        frame._fill_from_PreviewForm(Объект, num_main_contract_heading,
-                                     date_main_contract_heading,
-                                     date_main_contract_heading_end,
-                                     contragent_heading, type_business, okpo)
-
+        frame._fill_from_UpdateForm(Объект, num_main_contract,
+                                    date_main_contract_start,
+                                    date_main_contract_end, date_add_contract,
+                                    date_add_contract_end,
+                                    add_contract_num, date_add_contract_start,
+                                    square,
+                                    price1m2, cost_extra, cost, contragent,
+                                    business, okpo, description)
 
     def _onKeyRelease(*args):
         event = args[1]
@@ -914,6 +926,7 @@ class CreateForm(PaymentFrame):
             return False
         return True
 
+
 class UpdateForm(PaymentFrame):
     def __init__(self, parent, controller, connection, user_info, mvz,
                  type_business, **kwargs):
@@ -923,8 +936,7 @@ class UpdateForm(PaymentFrame):
         # Top Frame with description and user name
         top = tk.Frame(self, name='top_cf', padx=5)
         self.main_label = tk.Label(top,
-                                   text='Форма внесения дополнительного '
-                                        'соглашения к основому договору',
+                                   text='Форма редактирования данных по договору',
                                    padx=10, font=('Arial', 8, 'bold'))
         self.type_businessID, self.type_business = zip(*type_business)
         self.mvz_choice_list = []
@@ -1129,7 +1141,7 @@ class UpdateForm(PaymentFrame):
                          command=self._clear, style='ButtonRed.TButton')
         bt2.pack(side=tk.RIGHT, padx=15, pady=10)
 
-        bt1 = ttk.Button(bottom_cf, text="Создать", width=10,
+        bt1 = ttk.Button(bottom_cf, text="Обновить", width=10,
                          command=self._create_request,
                          style='ButtonGreen.TButton')
         bt1.pack(side=tk.RIGHT, padx=15, pady=10)
@@ -1212,30 +1224,42 @@ class UpdateForm(PaymentFrame):
         self.date_main_contract_end.set_date(datetime.now())
         self._deselect_checked_mvz()
 
-    def _fill_from_PreviewForm(self, mvz, num_main_contract_entry,
-                               date_main_contract_start, date_main_contract_end
-                               , contragent, type_business, okpo):
+    def _fill_from_UpdateForm(self, mvz, num_main_contract,
+                              date_main_contract_start,
+                              date_main_contract_end, date_add_contract,
+                              date_add_contract_end,
+                              add_contract_num, date_add_contract_start, square,
+                              price1m2, cost_extra, cost, contragent,
+                              business, okpo, description):
         """ When button "Добавить из договора" from PreviewForm is activated,
         fill some fields taken from choosed in PreviewForm request.
         """
         self.mvz_current.set(mvz)
-        self.type_business_box.set(type_business)
-        self.type_business_box.configure(state="readonly")
+        self.type_business_box.set(business)
         self.num_main_contract_entry.delete(0, tk.END)
-        self.num_main_contract_entry.insert(0, num_main_contract_entry)
-        self.num_main_contract_entry.configure(state="readonly")
+        self.num_main_contract_entry.insert(0, num_main_contract)
+        self.num_add_contract_entry.insert(0, add_contract_num)
+        self.date_add_contract.set_date(
+            self._convert_str_date(date_add_contract))
+        self.date_start_entry.set_date(
+            self._convert_str_date(date_add_contract_start))
+        self.date_finish_entry.set_date(
+            self._convert_str_date(date_add_contract_end))
         self.date_main_contract_start.set_date(
             self._convert_str_date(date_main_contract_start))
-        self.date_main_contract_start.configure(state="readonly")
         self.date_main_contract_end.set_date(
             self._convert_str_date(date_main_contract_end))
-        self.date_main_contract_end.configure(state="readonly")
+
         self.mvz_sap = self.get_mvzSAP(self.mvz_current.get())
         self.contragent_entry.delete(0, tk.END)
         self.contragent_entry.insert(0, contragent)
-        self.contragent_entry.configure(state="readonly")
         self.okpo_entry.insert(0, okpo)
-        self.square_cost.set('0,00')
+        self.square_cost.set(price1m2)
+        self.square.set(square)
+        self.sum_extra_entry.insert(0, cost)
+        self.sum_entry.insert(0, cost_extra)
+        self.desc_text.insert("1.0", description)
+        self._multiply_cost_square()
 
     def _convert_date(self, date, output=None):
         """ Take date and convert it into output format.
@@ -1423,6 +1447,7 @@ class UpdateForm(PaymentFrame):
             return False
         return True
 
+
 class PreviewForm(PaymentFrame):
     def __init__(self, parent, controller, connection, user_info,
                  mvz, type_business, status_list, **kwargs):
@@ -1527,7 +1552,7 @@ class PreviewForm(PaymentFrame):
             , 'Дата договора (начало)': 0, 'Дата договора (конец)': 0
             , '№ доп.согл.': 80, 'Дата доп.согл.': 80
             , 'Дата с': 80, 'Дата по': 90, 'Площадь': 50, 'Цена за 1м²': 70
-            , 'Сумма без НДС': 85
+            , 'Сумма экспл. без НДС': 0, 'Сумма без НДС': 85
             , 'Сумма с НДС': 85, 'Файл': 40, 'Имя файла': 0, 'Статус': 80
             , 'Описание': 12
                          }
@@ -1641,6 +1666,9 @@ class PreviewForm(PaymentFrame):
             to_fill = dict(zip(self.table["columns"],
                                self.table.item(curRow).get('values')))
             # print(to_fill)
+            # current_contract_info = self.conn.get_current_contract(to_fill.get('ID'))
+            objects = self.conn.get_additional_objects(to_fill.get('ID'))
+            print(objects)
             self.controller._fill_UpdateForm(**to_fill)
             self.controller._show_frame('UpdateForm')
 
@@ -1722,7 +1750,7 @@ class PreviewForm(PaymentFrame):
 
     def _open_report(self):
         """ Open independent report. """
-        os.startfile(os.path.join(REPORT_PATH, 'Заявки_на_оплату.xlsb'))
+        os.startfile(os.path.join(REPORT_PATH, 'Договора аренды.xlsb'))
 
     def _raise_Toplevel(self, frame, title, width, height,
                         static_geometry=True, options=()):

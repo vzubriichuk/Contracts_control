@@ -9,3 +9,8 @@
 05-02-2021 13:53:21 'UpdateForm'
 05-02-2021 13:54:04 'UpdateForm'
 05-02-2021 13:55:42 'UpdateForm'
+05-02-2021 17:20:49 'UpdateForm' object has no attribute '_clear'
+07-02-2021 09:37:03 'UpdateForm' object has no attribute '_clear'
+07-02-2021 09:37:28 'UpdateForm' object has no attribute '_clear'
+07-02-2021 09:38:09 'UpdateForm' object has no attribute '_clear'
+07-02-2021 09:39:04 'UpdateForm' object has no attribute '_clear'
