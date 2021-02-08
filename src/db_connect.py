@@ -117,6 +117,55 @@ class DBConnect(object):
             return
 
     @monitor_network_state
+    def update_request(self, userID, id, mvz, start_date, finish_date,
+                       sum_extra_total,
+                       sumtotal, nds, square, contragent, okpo,
+                       num_main_contract,
+                       num_add_contract, date_main_contract_start,
+                       date_add_contract, text, filename,
+                       date_main_contract_end,
+                       price_meter, type_business, mvz_choice_list):
+        """ Executes procedure that creates new request.
+        """
+        query = '''
+            exec contracts.update_contract @UserID = ?,
+                                        @ID = ?,
+                                        @MVZ = ?,
+                                        @DateStart = ?,
+                                        @DateFinish = ?,
+                                        @SumExtraNoTax = ?,
+                                        @SumNoTax = ?,
+                                        @Tax = ?,
+                                        @Square = ?,
+                                        @Contragent = ?,
+                                        @OKPO = ?,
+                                        @NumMain = ?,
+                                        @NumAdditional = ?,
+                                        @DateMain = ?,
+                                        @DateAdditional = ?,
+                                        @Description = ?,
+                                        @Filename = ?,
+                                        @DateMainEnd = ?,
+                                        @PriceSquareMeter = ?,
+                                        @TypeBusiness = ?,
+                                        @ObjectIDLIst = ?
+                '''
+        try:
+            self.__cursor.execute(query, userID, id, mvz, start_date, finish_date,
+                                  sum_extra_total, sumtotal, nds, square,
+                                  contragent, okpo, num_main_contract,
+                                  num_add_contract, date_main_contract_start,
+                                  date_add_contract, text, filename,
+                                  date_main_contract_end, price_meter,
+                                  type_business, mvz_choice_list)
+            request_allowed = self.__cursor.fetchone()[0]
+            self.__db.commit()
+            return request_allowed
+        except pyodbc.ProgrammingError:
+            return
+
+
+    @monitor_network_state
     def get_user_info(self, UserLogin):
         """ Returns information about current user based on ORIGINAL_LOGIN().
         """

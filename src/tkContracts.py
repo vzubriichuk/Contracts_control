@@ -261,7 +261,8 @@ class PaymentApp(tk.Tk):
 
     def _fill_UpdateForm(self, Объект, **kwargs):
         """ Control function to transfer data from Preview- to CreateForm. """
-        # print(kwargs)
+        id = kwargs['ID']
+
         num_main_contract = kwargs['№ договора']
         date_main_contract_start = kwargs['Дата договора (начало)']
         date_main_contract_end = kwargs['Дата договора (конец)']
@@ -277,15 +278,16 @@ class PaymentApp(tk.Tk):
         okpo = kwargs['ЕГРПОУ']
         description = kwargs['Описание']
         cost_extra = kwargs['Сумма экспл. без НДС']
+        filename = kwargs['Имя файла']
         frame = self._frames['UpdateForm']
-        frame._fill_from_UpdateForm(Объект, num_main_contract,
+        frame._fill_from_UpdateForm(Объект, id, num_main_contract,
                                     date_main_contract_start,
                                     date_main_contract_end, date_add_contract,
                                     date_add_contract_end,
                                     add_contract_num, date_add_contract_start,
                                     square,
                                     price1m2, cost_extra, cost, contragent,
-                                    business, okpo, description)
+                                    business, okpo, description, filename)
 
     def _onKeyRelease(*args):
         event = args[1]
@@ -807,7 +809,7 @@ class CreateForm(PaymentFrame):
             self._clear()
             self.controller._show_frame('PreviewForm')
         else:
-            # self._remove_upload_file()
+            self._remove_upload_file()
             messagebox.showerror(
                 messagetitle, 'Произошла ошибка при добавлении договора'
             )
@@ -1137,12 +1139,8 @@ class UpdateForm(PaymentFrame):
                          command=lambda: controller._show_frame('PreviewForm'))
         bt3.pack(side=tk.RIGHT, padx=15, pady=10)
 
-        bt2 = ttk.Button(bottom_cf, text="Очистить", width=10,
-                         command=self._clear, style='ButtonRed.TButton')
-        bt2.pack(side=tk.RIGHT, padx=15, pady=10)
-
         bt1 = ttk.Button(bottom_cf, text="Обновить", width=10,
-                         command=self._create_request,
+                         command=self._update_request,
                          style='ButtonGreen.TButton')
         bt1.pack(side=tk.RIGHT, padx=15, pady=10)
 
@@ -1175,7 +1173,6 @@ class UpdateForm(PaymentFrame):
                                                  variable=self.choices[choice],
                                                  onvalue=1, offvalue=0,
                                                  command=self._mvz_choice_list)
-            # print(self.mvz_choice_list)
 
     def _file_opener(self):
         filename = fd.askopenfilename()
@@ -1222,18 +1219,20 @@ class UpdateForm(PaymentFrame):
         self.date_add_contract.set_date(datetime.now())
         self.date_main_contract_start.set_date(datetime.now())
         self.date_main_contract_end.set_date(datetime.now())
+        self.file_label.config(text='Файл не выбран')
         self._deselect_checked_mvz()
 
-    def _fill_from_UpdateForm(self, mvz, num_main_contract,
+    def _fill_from_UpdateForm(self, mvz, id, num_main_contract,
                               date_main_contract_start,
                               date_main_contract_end, date_add_contract,
                               date_add_contract_end,
                               add_contract_num, date_add_contract_start, square,
                               price1m2, cost_extra, cost, contragent,
-                              business, okpo, description):
-        """ When button "Добавить из договора" from PreviewForm is activated,
+                              business, okpo, description, filename):
+        """ When button "Редактировать" from PreviewForm is activated,
         fill some fields taken from choosed in PreviewForm request.
         """
+        self.contract_id = id
         self.mvz_current.set(mvz)
         self.type_business_box.set(business)
         self.num_main_contract_entry.delete(0, tk.END)
@@ -1259,6 +1258,9 @@ class UpdateForm(PaymentFrame):
         self.sum_extra_entry.insert(0, cost)
         self.sum_entry.insert(0, cost_extra)
         self.desc_text.insert("1.0", description)
+        self.fill_filename = filename
+        if filename:
+            self.file_label.config(text='Файл добавлен')
         self._multiply_cost_square()
 
     def _convert_date(self, date, output=None):
@@ -1277,8 +1279,8 @@ class UpdateForm(PaymentFrame):
             return dat.strftime(output)
         return dat
 
-    def _create_request(self):
-        messagetitle = 'Добавление договора'
+    def _update_request(self):
+        messagetitle = 'Обновление договора'
         sumtotal = self.sum_entry.get()
         sum_extra_total = float(self.sum_extra_total.get_float_form()
                                 if self.sum_extra_entry.get() else 0)
@@ -1290,47 +1292,48 @@ class UpdateForm(PaymentFrame):
         if not is_validated:
             return
 
-        request = {'mvz': self.mvz_sap,  # self.mvz_sap.cget('text') or None,
-                   # 'office': self.office_box.get(),
-                   # 'categoryID': self.categories[self.category_box.get()],
-                   'start_date': self._convert_date(
-                       self.date_start_entry.get()),
-                   'finish_date': self._convert_date(
-                       self.date_finish_entry.get()),
-                   'sum_extra_total': sum_extra_total,
-                   'sumtotal': sumtotal,
-                   'nds': self.nds.get(),
-                   'square': square,
-                   'contragent': self.contragent_entry.get().strip().replace(
-                       '\n', '') or None,
-                   'okpo': self.okpo_entry.get(),
-                   'num_main_contract': self.num_main_contract_entry.get(),
-                   'num_add_contract': self.num_add_contract_entry.get(),
-                   'date_main_contract_start': self._convert_date(
-                       self.date_main_contract_start.get()),
-                   'date_add_contract': self._convert_date(
-                       self.date_add_contract.get()),
-                   'text': self.desc_text.get("1.0", tk.END).strip(),
-                   'filename': self.upload_filename,
-                   'date_main_contract_end': self._convert_date(
-                       self.date_main_contract_end.get()),
-                   'price_meter': price_meter,
-                   'type_business': self.type_business_box.get(),
-                   'mvz_choice_list': ','.join(map(str, self.mvz_choice_list))
+        update_request = {'id': self.contract_id,
+                          'mvz': self.mvz_sap,
+                          # self.mvz_sap.cget('text') or None,
+                          'start_date': self._convert_date(
+                              self.date_start_entry.get()),
+                          'finish_date': self._convert_date(
+                              self.date_finish_entry.get()),
+                          'sum_extra_total': sum_extra_total,
+                          'sumtotal': sumtotal,
+                          'nds': self.nds.get(),
+                          'square': square,
+                          'contragent': self.contragent_entry.get().strip().replace(
+                              '\n', '') or None,
+                          'okpo': self.okpo_entry.get(),
+                          'num_main_contract': self.num_main_contract_entry.get(),
+                          'num_add_contract': self.num_add_contract_entry.get(),
+                          'date_main_contract_start': self._convert_date(
+                              self.date_main_contract_start.get()),
+                          'date_add_contract': self._convert_date(
+                              self.date_add_contract.get()),
+                          'text': self.desc_text.get("1.0", tk.END).strip(),
+                          'filename': self.fill_filename if self.fill_filename else self.upload_filename,
+                          'date_main_contract_end': self._convert_date(
+                              self.date_main_contract_end.get()),
+                          'price_meter': price_meter,
+                          'type_business': self.type_business_box.get(),
+                          'mvz_choice_list': ','.join(
+                              map(str, self.mvz_choice_list))
 
-                   }
-        created_success = self.conn.create_request(userID=self.userID,
-                                                   **request)
-        if created_success == 1:
+                          }
+        update_success = self.conn.update_request(userID=self.userID,
+                                                  **update_request)
+        if update_success == 1:
             messagebox.showinfo(
-                messagetitle, 'Договор добавлен'
+                messagetitle, 'Договор обновлен'
             )
             self._clear()
             self.controller._show_frame('PreviewForm')
         else:
             # self._remove_upload_file()
             messagebox.showerror(
-                messagetitle, 'Произошла ошибка при добавлении договора'
+                messagetitle, 'Произошла ошибка при обновлении договора'
             )
 
             # МВЗ, Договор, Арендодатель, ЕГРПОУ, Описание
@@ -1668,7 +1671,6 @@ class PreviewForm(PaymentFrame):
             # print(to_fill)
             # current_contract_info = self.conn.get_current_contract(to_fill.get('ID'))
             objects = self.conn.get_additional_objects(to_fill.get('ID'))
-            print(objects)
             self.controller._fill_UpdateForm(**to_fill)
             self.controller._show_frame('UpdateForm')
 

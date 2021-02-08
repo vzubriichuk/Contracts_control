@@ -14,3 +14,6 @@
 07-02-2021 09:37:28 'UpdateForm' object has no attribute '_clear'
 07-02-2021 09:38:09 'UpdateForm' object has no attribute '_clear'
 07-02-2021 09:39:04 'UpdateForm' object has no attribute '_clear'
+08-02-2021 10:23:18 'UpdateForm' object has no attribute '_clear'
+08-02-2021 10:23:49 'UpdateForm' object has no attribute '_clear'
+08-02-2021 10:25:19 'UpdateForm' object has no attribute '_clear'
